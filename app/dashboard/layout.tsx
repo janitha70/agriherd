@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect } from "react"
 import {
     LayoutDashboard,
     Beef,
@@ -11,6 +12,7 @@ import {
     Settings,
     Zap
 } from "lucide-react"
+import { processSyncQueue, hydrateLocalDatabase } from "@/lib/sync"
 
 const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -27,6 +29,27 @@ export default function DashboardLayout({
     children: React.ReactNode
 }) {
     const pathname = usePathname()
+
+    // --- Offline-First Background Sync Logic ---
+    useEffect(() => {
+        const initializeData = async () => {
+            // Push any offline data up to Supabase
+            await processSyncQueue()
+            // Pull the latest cloud data down to Dexie
+            await hydrateLocalDatabase()
+        }
+
+        // Run once when the dashboard loads
+        initializeData()
+
+        // Listen for the device reconnecting to the internet
+        window.addEventListener('online', initializeData)
+
+        // Cleanup listener when leaving the dashboard
+        return () => {
+            window.removeEventListener('online', initializeData)
+        }
+    }, [])
 
     return (
         <div className="min-h-screen flex bg-gray-100">
@@ -54,8 +77,8 @@ export default function DashboardLayout({
                                     key={item.name}
                                     href={item.href}
                                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive
-                                            ? "bg-emerald-900 text-white"
-                                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                        ? "bg-emerald-900 text-white"
+                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                         }`}
                                 >
                                     <Icon className="h-4 w-4" />
