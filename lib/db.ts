@@ -37,9 +37,9 @@ export class AgriHerdDatabase extends Dexie {
   constructor() {
     super('AgriHerdDB')
 
-    this.version(2).stores({
-      animals: '++id, tagId, species, syncStatus',
-      healthMetrics: '++id, animalTagId, syncStatus',
+    this.version(3).stores({
+      animals: '++id, tagId, species, breed, dob, syncStatus',
+      healthMetrics: '++id, animalTagId, temperature, feedIntake, yieldAmount, syncStatus, recordedAt',
       syncQueue: '++id, actionType, timestamp'
     })
   }

@@ -10,11 +10,12 @@ Welcome to the comprehensive technical documentation for **AgriHerd**, an indust
 3. [Use Cases](#-use-cases)
 4. [Entity-Relationship (ER) Diagram](#-entity-relationship-er-diagram)
 5. [How the Backend Works](#-how-the-backend-works)
-   - [Offline-First Local Storage Engine](#1-offline-first-local-storage-engine-dexiejs)
+   - [Offline-First Local Storage Engine (Dexie.js)](#1-offline-first-local-storage-engine-dexiejs)
    - [Sync Queue Processing Engine](#2-sync-queue-processing-engine)
    - [Self-Healing Schema Recovery Algorithm](#3-self-healing-schema-recovery-algorithm)
    - [Cloud Hydration Pipeline](#4-cloud-hydration-pipeline)
 6. [API & Interface Reference](#-api--interface-reference)
+7. [Tech Stack Summary](#-tech-stack-summary)
 
 ---
 
@@ -51,8 +52,8 @@ AgriHerd is engineered as an **Offline-First Web Application** to function relia
 ## 🚀 Project Work Progress
 
 ### 1. Core Framework & UI Foundation
-- **Next.js 16 (App Router)**: Structured with modular app directories (`/dashboard`, `/dashboard/livestock`, `/dashboard/records`, `/dashboard/analytics`).
-- **Industrial Design System**: Modern green/emerald themed UI with glassmorphism, responsive sidebar navigation, and card-based metrics.
+- **Next.js 16 (App Router)**: Structured with modular app directories (`/dashboard`, `/dashboard/livestock`, `/dashboard/records`, `/dashboard/analytics`, `/dashboard/settings`).
+- **Industrial Design System**: Modern green/emerald themed UI with glassmorphism, responsive sidebar navigation, status badges, and card-based metrics.
 - **Component Suite**: Reusable UI components powered by Tailwind CSS v4, Lucide React icons, and Radix/Base UI primitives.
 
 ### 2. Local Storage Implementation (`Dexie.js`)
@@ -66,7 +67,7 @@ AgriHerd is engineered as an **Offline-First Web Application** to function relia
 
 ### 4. Animal Registration & Vitals Logging
 - **Animal Registration Form** (`/dashboard/livestock/new`): Captures tag ID, species, breed, and date of birth (DOB). Writes immediately to local storage and pushes action to `syncQueue`.
-- **Health & Production Logging Form** (`/dashboard/records`): Captures body temperature, feed intake, daily milk/milk-equivalent yield, and behavioral observations.
+- **Health & Production Logging Form** (`/dashboard/records`): Captures body temperature (°C), feed intake (kg), daily milk/milk-equivalent yield (L/kg), and behavioral observations.
 
 ### 5. Backend Sync & Schema Resilience Engine (`lib/sync.ts`)
 - **Background Queue Execution**: Automatically runs when the dashboard mounts or when the browser regains an internet connection (`window.onLine`).
@@ -108,11 +109,28 @@ AgriHerd is engineered as an **Offline-First Web Application** to function relia
 
 ### UC-4: Cloud Data Hydration
 - **Actor**: Background System Service.
-- **Trigger**: Following successful sync execution.
+- **Trigger**: Following successful sync execution or layout mount.
 - **Flow**:
   1. `hydrateLocalDatabase()` queries Supabase `livestock` table using `.select('*')`.
   2. Maps cloud records (`tag_number`, `species`, `created_at`) into local Dexie entity format.
   3. Replaces synced records in local IndexedDB to keep field devices synchronized with cloud state.
+
+### UC-5: Real-Time Herd Analytics & Monitoring
+- **Actor**: Farm Administrator / Analyst.
+- **Precondition**: User navigates to Analytics Overview (`/dashboard/analytics`).
+- **Flow**:
+  1. System queries local IndexedDB and computes weekly performance trends.
+  2. Displays active alerts for animals requiring medical attention or vitals checks.
+  3. Renders yield comparison graphs against historical baselines.
+
+### UC-6: Self-Healing Schema Recovery
+- **Actor**: Automated System / Database Synchronization Engine.
+- **Trigger**: Cloud database schema field missing during REST POST payload insertion.
+- **Flow**:
+  1. Sync process sends POST payload to Supabase endpoint.
+  2. Supabase returns error `PGRST204` specifying missing column (e.g., `dob`).
+  3. System regex matcher identifies missing field, logs warning, and prunes field from payload.
+  4. Engine retries POST request automatically until successful insertion occurs.
 
 ---
 
@@ -317,4 +335,4 @@ export async function hydrateLocalDatabase() {
 | **Sync Strategy** | Local-First Event Queue with Self-Healing Schema Recovery |
 
 ---
-*Document updated automatically on 2026-08-18.*
+*Document updated on 2026-08-19.*

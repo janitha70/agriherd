@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import { useLiveQuery } from "dexie-react-hooks"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { Zap, Clock } from "lucide-react"
+import { Zap, Clock, CheckCircle2 } from "lucide-react"
 import { db } from "@/lib/db"
 
 export default function RecordsPage() {
@@ -18,7 +19,15 @@ export default function RecordsPage() {
         observations: ""
     })
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    // 1. Fetch live animals for the dropdown (Zero network latency)
+    const animals = useLiveQuery(() => db.animals.toArray()) || []
+
+    // 2. Fetch the 5 most recent logs for the sidebar
+    const recentLogs = useLiveQuery(() =>
+        db.healthMetrics.orderBy('recordedAt').reverse().limit(5).toArray()
+    ) || []
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.id]: e.target.value })
     }
 
@@ -47,9 +56,15 @@ export default function RecordsPage() {
                 timestamp: new Date().toISOString()
             })
 
-            // Reset form
+            // Offline Check & Form Reset
+            if (!navigator.onLine) {
+                alert(`✅ Offline Success! Vitals for ${formData.entityId} saved to local queue.`);
+            } else {
+                // If online, the global SyncProvider will automatically flush this!
+                alert(`✅ Success! Vitals logged and syncing to cloud.`);
+            }
+
             setFormData({ entityId: "", temp: "", feed: "", yield: "", observations: "" })
-            alert("Vitals logged locally and queued for sync!")
 
         } catch (error) {
             console.error("Failed to log vitals:", error)
@@ -68,11 +83,24 @@ export default function RecordsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <form onSubmit={handleSubmit} className="lg:col-span-2">
-                    <Card className="shadow-sm">
+                    <Card className="shadow-sm border-gray-200">
                         <CardContent className="space-y-6 pt-6">
                             <div className="space-y-2">
                                 <Label htmlFor="entityId">Entity ID / Tag Number</Label>
-                                <Input id="entityId" value={formData.entityId} onChange={handleChange} required placeholder="e.g. B-7492" />
+                                <select
+                                    id="entityId"
+                                    value={formData.entityId}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-emerald-900 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <option value="" disabled>Select an Animal</option>
+                                    {animals.map((animal) => (
+                                        <option key={animal.id} value={animal.tagId}>
+                                            {animal.tagId} ({animal.species})
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -103,33 +131,53 @@ export default function RecordsPage() {
                             </div>
                         </CardContent>
                         <CardFooter className="bg-gray-50 border-t rounded-b-xl py-4">
-                            <Button type="submit" disabled={isSubmitting} className="w-full bg-emerald-900 hover:bg-emerald-800 text-white font-bold">
+                            <Button type="submit" disabled={isSubmitting || animals.length === 0} className="w-full bg-emerald-900 hover:bg-emerald-800 text-white font-bold">
                                 {isSubmitting ? "Logging..." : "Submit Log"}
                             </Button>
                         </CardFooter>
                     </Card>
                 </form>
 
-                {/* Static Sidebar (We will make this dynamic later) */}
-                <Card className="shadow-sm h-fit">
-                    <CardHeader className="border-b pb-4">
+                {/* DYNAMIC SIDEBAR */}
+                <Card className="shadow-sm h-fit border-gray-200">
+                    <CardHeader className="border-b pb-4 bg-gray-50/50 rounded-t-xl">
                         <CardTitle className="text-lg flex items-center gap-2">
-                            <Clock className="h-5 w-5 text-gray-400" />
+                            <Clock className="h-5 w-5 text-gray-500" />
                             Recent Entries
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
                         <div className="divide-y">
-                            <div className="p-4 bg-red-50/50">
-                                <div className="flex justify-between items-start mb-1">
-                                    <span className="font-bold text-red-900">A-0021</span>
-                                    <span className="text-xs text-red-400">2 hrs ago</span>
-                                </div>
-                                <div className="text-sm text-red-700 flex items-center gap-1">
-                                    <Zap className="h-3 w-3 fill-red-600 animate-pulse" />
-                                    Flagged: High Temp (40.2°C)
-                                </div>
-                            </div>
+                            {recentLogs.length === 0 ? (
+                                <p className="p-6 text-sm text-center text-gray-500">No vitals logged yet.</p>
+                            ) : (
+                                recentLogs.map((log) => {
+                                    const isAlert = log.temperature > 39.5 || log.yieldAmount < 5;
+                                    return (
+                                        <div key={log.id} className={`p-4 ${isAlert ? 'bg-red-50/50' : 'bg-white'}`}>
+                                            <div className="flex justify-between items-start mb-1">
+                                                <span className={`font-bold ${isAlert ? 'text-red-900' : 'text-gray-900'}`}>
+                                                    {log.animalTagId}
+                                                </span>
+                                                <span className="text-xs text-gray-400">
+                                                    {new Date(log.recordedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                            {isAlert ? (
+                                                <div className="text-sm text-red-700 flex items-center gap-1">
+                                                    <Zap className="h-3 w-3 fill-red-600" />
+                                                    Flagged: {log.temperature > 39.5 ? `High Temp (${log.temperature}°C)` : 'Low Yield'}
+                                                </div>
+                                            ) : (
+                                                <div className="text-sm text-gray-600 flex items-center gap-1">
+                                                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                                    Yield: {log.yieldAmount} | Temp: {log.temperature}°C
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            )}
                         </div>
                     </CardContent>
                 </Card>

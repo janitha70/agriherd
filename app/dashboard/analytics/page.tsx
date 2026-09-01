@@ -1,60 +1,116 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, Activity, Zap } from "lucide-react"
+'use client';
 
-export default function AnalyticsPage() {
+import React, { useMemo } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '@/lib/db'; // Ensure this matches your Dexie setup path
+import { Zap, Activity, Droplet, Wheat } from 'lucide-react';
+
+// Shadcn UI Imports
+import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+export default function AnalyticsDashboard() {
+    // 1. Fetch live data from local IndexedDB
+    const animals = useLiveQuery(() => db.animals.toArray()) || [];
+    const metrics = useLiveQuery(() => db.healthMetrics.toArray()) || [];
+
+    // 2. Compute Analytics locally (Zero network latency)
+    const analytics = useMemo(() => {
+        let totalYield = 0;
+        let totalFeed = 0;
+        const alerts: any[] = [];
+
+        metrics.forEach((metric) => {
+            totalYield += metric.yieldAmount || 0;
+            totalFeed += metric.feedIntake || 0;
+
+            // Smart Warning Logic: Flag high temperatures or low yield
+            if (metric.temperature > 39.5 || metric.yieldAmount < 5) {
+                const animal = animals.find(a => a.tagId === metric.animalTagId);
+                alerts.push({
+                    id: metric.id,
+                    tagId: metric.animalTagId,
+                    species: animal?.species || 'Unknown',
+                    issue: metric.temperature > 39.5 ? `High Temp: ${metric.temperature}°C` : 'Low Yield Drop',
+                    recordedAt: new Date(metric.recordedAt).toLocaleDateString()
+                });
+            }
+        });
+
+        return { totalYield, totalFeed, alerts };
+    }, [metrics, animals]);
+
     return (
-        <div className="max-w-6xl mx-auto space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900">Analytics Overview</h1>
-                <p className="text-gray-500 mt-1">Real-time performance metrics and historical yield comparisons.</p>
-            </div>
+        <div className="p-4 space-y-6 max-w-md mx-auto min-h-screen pb-24">
+            <header className="mb-2">
+                <h1 className="text-2xl font-bold tracking-tight">Herd Analytics</h1>
+                <p className="text-sm text-muted-foreground">Real-time local insights</p>
+            </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="shadow-sm">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
-                            Weekly Performance <TrendingUp className="h-4 w-4" />
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-gray-900">94.2%</div>
-                        <div className="text-xs text-emerald-600 mt-1 font-medium bg-emerald-50 w-fit px-2 py-0.5 rounded-full">+3.4% vs last week</div>
+            {/* --- SMART ALERTS SECTION --- */}
+            {analytics.alerts.length > 0 && (
+                <section className="space-y-3">
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Active Alerts</h2>
+                    <div className="space-y-3">
+                        {analytics.alerts.map((alert) => (
+                            <Alert key={alert.id} variant="destructive" className="bg-red-50 border-red-200">
+                                <Zap className="h-5 w-5" />
+                                <AlertTitle className="font-bold text-red-900">
+                                    Tag: {alert.tagId} ({alert.species})
+                                </AlertTitle>
+                                <AlertDescription className="mt-1 flex flex-col gap-1 text-red-700">
+                                    <span className="text-sm font-medium">{alert.issue}</span>
+                                    <span className="text-xs opacity-80">{alert.recordedAt}</span>
+                                </AlertDescription>
+                            </Alert>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* --- PERFORMANCE OVERVIEW SECTION --- */}
+            <section className="space-y-3">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Weekly Performance</h2>
+
+                {/* Yield Card */}
+                <Card className="shadow-sm border-gray-200">
+                    <CardContent className="p-5 flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-muted-foreground mb-1">Total Yield (7 Days)</p>
+                            <p className="text-3xl font-bold">{analytics.totalYield.toFixed(1)} <span className="text-lg font-normal text-muted-foreground">L</span></p>
+                        </div>
+                        <div className="bg-blue-50 p-3 rounded-full">
+                            <Droplet className="w-7 h-7 text-blue-500" />
+                        </div>
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-sm border-t-4 border-t-blue-500">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
-                            Predicted Trends <Activity className="h-4 w-4" />
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-gray-900">Stable</div>
-                        <div className="text-xs text-gray-500 mt-1">Yield projected to maintain current trajectory.</div>
+                {/* Feed Card */}
+                <Card className="shadow-sm border-gray-200">
+                    <CardContent className="p-5 flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-muted-foreground mb-1">Total Feed Consumed</p>
+                            <p className="text-3xl font-bold">{analytics.totalFeed.toFixed(1)} <span className="text-lg font-normal text-muted-foreground">kg</span></p>
+                        </div>
+                        <div className="bg-emerald-50 p-3 rounded-full">
+                            <Wheat className="w-7 h-7 text-emerald-500" />
+                        </div>
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-sm border-red-200 bg-red-50/30">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold text-red-700 uppercase flex items-center justify-between">
-                            Active Alerts <Zap className="h-4 w-4 fill-red-600 animate-pulse" />
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-red-700">2</div>
-                        <div className="text-xs text-red-600 mt-1">Units requiring immediate attention.</div>
+                {/* Active Herd Card */}
+                <Card className="shadow-sm border-gray-200">
+                    <CardContent className="p-5 flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-muted-foreground mb-1">Active Monitored Herd</p>
+                            <p className="text-3xl font-bold">{animals.length} <span className="text-lg font-normal text-muted-foreground">Head</span></p>
+                        </div>
+                        <div className="bg-purple-50 p-3 rounded-full">
+                            <Activity className="w-7 h-7 text-purple-500" />
+                        </div>
                     </CardContent>
                 </Card>
-            </div>
-
-            <Card className="shadow-sm min-h-[400px] flex flex-col">
-                <CardHeader>
-                    <CardTitle className="text-lg">Yield Comparison vs Historical Data</CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 flex items-center justify-center bg-gray-50/50 m-6 rounded-lg border border-dashed">
-                    <p className="text-gray-400 text-sm">Interactive Chart Component (e.g., Recharts) will render here.</p>
-                </CardContent>
-            </Card>
+            </section>
         </div>
-    )
+    );
 }

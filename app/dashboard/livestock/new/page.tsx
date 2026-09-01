@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { UploadCloud } from "lucide-react"
+import { UploadCloud, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 import { db } from "@/lib/db"
+import { compressImageLocally } from "@/lib/imageUtils"
 
 export default function RegisterAnimal() {
     const router = useRouter()
@@ -18,11 +19,33 @@ export default function RegisterAnimal() {
         breed: "",
         dob: "",
     })
+    const [photoBase64, setPhotoBase64] = useState<string | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isCompressing, setIsCompressing] = useState(false)
+
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Update state when user types
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.id]: e.target.value })
+    }
+
+    // Handle photo selection and compression
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setIsCompressing(true)
+        try {
+            // Compress file strictly to JPG format under 1MB before storing
+            const safeBase64Photo = await compressImageLocally(file, 1)
+            setPhotoBase64(safeBase64Photo)
+        } catch (error) {
+            console.error("Failed to compress image:", error)
+            alert("Error processing the photo. Please try a different image.")
+        } finally {
+            setIsCompressing(false)
+        }
     }
 
     // Handle saving the data locally
@@ -37,6 +60,7 @@ export default function RegisterAnimal() {
                 species: formData.species,
                 breed: formData.breed,
                 dob: formData.dob,
+                photoStr: photoBase64 || undefined,
                 syncStatus: 'pending' as const,
                 createdAt: new Date().toISOString(),
             }
@@ -51,8 +75,22 @@ export default function RegisterAnimal() {
                 timestamp: new Date().toISOString()
             })
 
-            // 4. Redirect the user back to the livestock list
-            router.push("/dashboard/livestock")
+            // 4. Handle redirect or offline confirmation
+            if (!navigator.onLine) {
+                alert("Animal successfully saved to local queue! It will sync automatically when back online.")
+                setFormData({
+                    tagId: "",
+                    species: "",
+                    breed: "",
+                    dob: "",
+                })
+                setPhotoBase64(null)
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = ""
+                }
+            } else {
+                router.push("/dashboard/livestock")
+            }
         } catch (error) {
             console.error("Failed to save animal locally:", error)
             alert("Error saving data. Please try again.")
@@ -127,16 +165,42 @@ export default function RegisterAnimal() {
 
                     <div className="space-y-2 pt-4">
                         <Label>Animal Photo</Label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer">
-                            <div className="bg-emerald-100 p-3 rounded-full mb-4">
-                                <UploadCloud className="h-6 w-6 text-emerald-700" />
-                            </div>
-                            <p className="text-sm font-medium text-gray-900 mb-1">
-                                Drag and drop photo here or click to browse
-                            </p>
-                            <p className="text-xs text-gray-500">
-                                Upload photo (JPG format only, under 1MB)
-                            </p>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                        />
+                        <div
+                            className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer ${photoBase64 ? 'border-emerald-500 bg-emerald-50' : 'border-gray-300 hover:bg-gray-50'}`}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            {isCompressing ? (
+                                <p className="text-sm font-medium text-emerald-700 animate-pulse">Compressing photo...</p>
+                            ) : photoBase64 ? (
+                                <>
+                                    <div className="bg-emerald-200 p-3 rounded-full mb-4">
+                                        <CheckCircle2 className="h-6 w-6 text-emerald-800" />
+                                    </div>
+                                    <p className="text-sm font-medium text-emerald-900 mb-1">
+                                        Photo compressed & ready
+                                    </p>
+                                    <p className="text-xs text-emerald-700">Click to change photo</p>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="bg-emerald-100 p-3 rounded-full mb-4">
+                                        <UploadCloud className="h-6 w-6 text-emerald-700" />
+                                    </div>
+                                    <p className="text-sm font-medium text-gray-900 mb-1">
+                                        Tap here to take or upload a photo
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                        Automatically compressed to JPG (under 1MB)
+                                    </p>
+                                </>
+                            )}
                         </div>
                     </div>
                 </CardContent>
@@ -146,7 +210,7 @@ export default function RegisterAnimal() {
                     </Link>
                     <Button
                         type="submit"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isCompressing}
                         className="bg-emerald-900 hover:bg-emerald-800 text-white font-bold px-8"
                     >
                         {isSubmitting ? "Saving..." : "Register Animal"}
