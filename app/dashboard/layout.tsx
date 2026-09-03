@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useLanguage } from "@/contexts/LanguageContext"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import {
@@ -8,13 +9,17 @@ import {
     Beef,
     PlusCircle,
     ClipboardList,
+    Activity,
     BarChart3,
     Settings,
     Zap,
     LogOut,
     User,
     Trash2,
-    AlertTriangle
+    AlertTriangle,
+    Phone,
+    ShieldPlus,
+    TrendingUp
 } from "lucide-react"
 import { processSyncQueue, hydrateLocalDatabase } from "@/lib/sync"
 import { supabase } from "@/lib/supabase"
@@ -24,6 +29,9 @@ const navigation = [
     { name: "Livestock", href: "/dashboard/livestock", icon: Beef },
     { name: "Add Animal", href: "/dashboard/livestock/new", icon: PlusCircle },
     { name: "Records", href: "/dashboard/records", icon: ClipboardList },
+    { name: "Log Vitals", href: "/dashboard/log-vitals", icon: Activity },
+    { name: "Health Tracker", href: "/dashboard/health", icon: ShieldPlus },
+    { name: "Production", href: "/dashboard/production", icon: TrendingUp },
     { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
@@ -33,11 +41,13 @@ export default function DashboardLayout({
 }: {
     children: React.ReactNode
 }) {
+    const { t, language, toggleLanguage } = useLanguage()
     const pathname = usePathname()
     const router = useRouter()
 
     const [farmerName, setFarmerName] = useState("Farmer")
     const [userEmail, setUserEmail] = useState("")
+    const [userPhone, setUserPhone] = useState("")
     const [farmName, setFarmName] = useState("")
     const [isLoggingOut, setIsLoggingOut] = useState(false)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -54,10 +64,14 @@ export default function DashboardLayout({
                 const fullName = user.user_metadata?.full_name || user.user_metadata?.name
                 if (fullName) setFarmerName(fullName)
                 if (user.email) setUserEmail(user.email)
+                if (user.phone) setUserPhone(user.phone)
             } else {
                 const name = localStorage.getItem("agriherd_farmer_name")
                 if (name) setFarmerName(name)
             }
+
+            const phone = localStorage.getItem("agriherd_phone_number")
+            if (phone) setUserPhone(phone)
 
             const farm = localStorage.getItem("agriherd_farm_name")
             if (farm) setFarmName(farm)
@@ -97,6 +111,7 @@ export default function DashboardLayout({
             localStorage.removeItem("agriherd_session")
             localStorage.removeItem("agriherd_farmer_name")
             localStorage.removeItem("agriherd_farm_name")
+            localStorage.removeItem("agriherd_phone_number")
             router.push("/")
         }
     }
@@ -132,6 +147,7 @@ export default function DashboardLayout({
             localStorage.removeItem("agriherd_session")
             localStorage.removeItem("agriherd_farmer_name")
             localStorage.removeItem("agriherd_farm_name")
+            localStorage.removeItem("agriherd_phone_number")
             router.push("/")
         } catch (err: any) {
             setDeleteError(err?.message || "Something went wrong. Please try again.")
@@ -179,7 +195,7 @@ export default function DashboardLayout({
                                         }`}
                                 >
                                     <Icon className="h-4 w-4" />
-                                    {item.name}
+                                    {t(item.name)}
                                 </Link>
                             )
                         })}
@@ -193,8 +209,16 @@ export default function DashboardLayout({
                         className="w-full flex items-center justify-center gap-2 bg-emerald-950 text-white font-semibold py-2.5 rounded-lg text-sm hover:bg-emerald-900 transition-colors"
                     >
                         <PlusCircle className="h-4 w-4" />
-                        Register Animal
+                        {t("Register Animal")}
                     </Link>
+
+                    {/* Language Toggle */}
+                    <button
+                        onClick={toggleLanguage}
+                        className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-700 font-semibold py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors shadow-sm"
+                    >
+                        {language === 'en' ? 'EN / සිං' : 'සිං / EN'}
+                    </button>
 
                     {/* User Profile Card */}
                     <div className="border border-gray-100 rounded-xl p-3 bg-gray-50 space-y-3">
@@ -206,7 +230,12 @@ export default function DashboardLayout({
                             {/* Info */}
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-gray-900 truncate">{farmerName}</p>
-                                {userEmail ? (
+                                {userPhone ? (
+                                    <p className="text-xs text-emerald-700 font-medium truncate flex items-center gap-1.5 mt-0.5">
+                                        <Phone className="w-3 h-3 shrink-0 text-emerald-600" />
+                                        <span>{userPhone}</span>
+                                    </p>
+                                ) : userEmail ? (
                                     <p className="text-xs text-gray-400 truncate">{userEmail}</p>
                                 ) : farmName ? (
                                     <p className="text-xs text-gray-400 truncate">{farmName}</p>

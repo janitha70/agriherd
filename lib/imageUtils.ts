@@ -19,8 +19,8 @@ export const compressImageLocally = (file: File, maxSizeMB: number = 1): Promise
                 let { width, height } = img;
 
                 // Max dimensions to prevent massive canvas memory usage
-                const MAX_WIDTH = 1200;
-                const MAX_HEIGHT = 1200;
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 800;
 
                 if (width > height) {
                     if (width > MAX_WIDTH) {

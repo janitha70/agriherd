@@ -1,16 +1,20 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { WifiOff, RefreshCw, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 export default function SettingsPage() {
+    const { t } = useLanguage()
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900">Profile & Settings</h1>
-                <p className="text-gray-500 mt-1">Manage account preferences and offline synchronization.</p>
+                <h1 className="text-3xl font-bold tracking-tight text-gray-900">{t("settingsTitle")}</h1>
+                <p className="text-gray-500 mt-1">{t("settingsSubtitle")}</p>
             </div>
 
             {/* Sync Status - Crucial for offline-first */}
@@ -18,24 +22,24 @@ export default function SettingsPage() {
                 <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                         <WifiOff className="h-5 w-5 text-amber-500" />
-                        Sync Status & Queue
+                        {t("syncStatusQueue")}
                     </CardTitle>
-                    <CardDescription>Monitor network connectivity and manage cached actions.</CardDescription>
+                    <CardDescription>{t("syncDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="bg-amber-50 rounded-lg p-4 flex items-center justify-between">
                         <div>
-                            <p className="font-bold text-amber-900">Offline Mode Active</p>
-                            <p className="text-sm text-amber-700">Data is safely cached locally.</p>
+                            <p className="font-bold text-amber-900">{t("offlineModeActive")}</p>
+                            <p className="text-sm text-amber-700">{t("dataCached")}</p>
                         </div>
                         <Button variant="outline" className="bg-white border-amber-200 text-amber-900 hover:bg-amber-100">
                             <RefreshCw className="h-4 w-4 mr-2" />
-                            Force Sync
+                            {t("forceSync")}
                         </Button>
                     </div>
 
                     <div className="space-y-2 mt-4">
-                        <h3 className="text-sm font-bold text-gray-900">Pending Cached Actions (2)</h3>
+                        <h3 className="text-sm font-bold text-gray-900">{t("pendingCachedActions")} (2)</h3>
                         <div className="border rounded-lg divide-y text-sm">
                             <div className="p-3 flex justify-between items-center">
                                 <span className="font-medium">Log Vitals (Tag B-7492)</span>
@@ -53,22 +57,22 @@ export default function SettingsPage() {
             {/* Account Details */}
             <Card className="shadow-sm">
                 <CardHeader>
-                    <CardTitle className="text-lg">Account Details</CardTitle>
+                    <CardTitle className="text-lg">{t("accountDetails")}</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <Label>Operator Name</Label>
+                        <Label>{t("operatorName")}</Label>
                         <Input defaultValue="John H. Smith" disabled className="bg-gray-50" />
                     </div>
                     <div className="space-y-2">
-                        <Label>Clearance Level</Label>
+                        <Label>{t("clearanceLevel")}</Label>
                         <Input defaultValue="Level 4 - Manager" disabled className="bg-gray-50" />
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                        <Label>Terminal ID</Label>
+                        <Label>{t("terminalId")}</Label>
                         <div className="flex gap-2">
                             <Input defaultValue="TERM-992-BETA" disabled className="bg-gray-50 font-mono" />
-                            <Button variant="secondary">Copy</Button>
+                            <Button variant="secondary">{t("copy")}</Button>
                         </div>
                     </div>
                 </CardContent>
@@ -77,25 +81,25 @@ export default function SettingsPage() {
             {/* System Preferences */}
             <Card className="shadow-sm mb-12">
                 <CardHeader>
-                    <CardTitle className="text-lg">System Thresholds</CardTitle>
+                    <CardTitle className="text-lg">{t("systemThresholds")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
                         <Checkbox id="offline" defaultChecked />
                         <div className="space-y-1 leading-none">
                             <label htmlFor="offline" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                Force Offline Mode
+                                {t("forceOfflineMode")}
                             </label>
-                            <p className="text-xs text-muted-foreground">Store data locally even when connection is restored.</p>
+                            <p className="text-xs text-muted-foreground">{t("forceOfflineDesc")}</p>
                         </div>
                     </div>
                     <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
                         <Checkbox id="alerts" defaultChecked />
                         <div className="space-y-1 leading-none">
                             <label htmlFor="alerts" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                Critical Alerts Only
+                                {t("criticalAlertsOnly")}
                             </label>
-                            <p className="text-xs text-muted-foreground">Mute non-essential notifications in the field.</p>
+                            <p className="text-xs text-muted-foreground">{t("criticalAlertsDesc")}</p>
                         </div>
                     </div>
                 </CardContent>

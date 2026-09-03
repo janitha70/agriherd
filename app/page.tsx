@@ -15,32 +15,25 @@ import { AuthModal } from "@/components/auth/AuthModal"
 export default function CommercialLandingPage() {
   const router = useRouter()
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
-  const [isCheckingSession, setIsCheckingSession] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
+        setIsAuthenticated(true)
         localStorage.setItem("agriherd_session", "active")
-        const hasProfile = localStorage.getItem("agriherd_farmer_name")
-        if (hasProfile) {
-          router.push("/dashboard")
-        } else {
-          router.push("/onboarding")
-        }
       } else {
+        setIsAuthenticated(false)
         localStorage.removeItem("agriherd_session")
-        setIsCheckingSession(false)
       }
     }
     checkSession()
-  }, [router])
-
-  if (isCheckingSession) return null
+  }, [])
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
-      <Navbar onOpenAuth={() => setIsAuthModalOpen(true)} />
+      <Navbar onOpenAuth={() => setIsAuthModalOpen(true)} isAuthenticated={isAuthenticated} />
       <HeroSection onOpenAuth={() => setIsAuthModalOpen(true)} />
       <TrustBar />
       <FeatureGrid />

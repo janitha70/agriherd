@@ -8,8 +8,10 @@ import { Zap, Activity, Droplet, Wheat } from 'lucide-react';
 // Shadcn UI Imports
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function AnalyticsDashboard() {
+    const { t } = useLanguage();
     // 1. Fetch live data from local IndexedDB
     const animals = useLiveQuery(() => db.animals.toArray()) || [];
     const metrics = useLiveQuery(() => db.healthMetrics.toArray()) || [];
@@ -43,14 +45,14 @@ export default function AnalyticsDashboard() {
     return (
         <div className="p-4 space-y-6 max-w-md mx-auto min-h-screen pb-24">
             <header className="mb-2">
-                <h1 className="text-2xl font-bold tracking-tight">Herd Analytics</h1>
-                <p className="text-sm text-muted-foreground">Real-time local insights</p>
+                <h1 className="text-2xl font-bold tracking-tight">{t("analyticsTitle")}</h1>
+                <p className="text-sm text-muted-foreground">{t("analyticsSubtitle")}</p>
             </header>
 
             {/* --- SMART ALERTS SECTION --- */}
             {analytics.alerts.length > 0 && (
                 <section className="space-y-3">
-                    <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Active Alerts</h2>
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("activeAlerts")}</h2>
                     <div className="space-y-3">
                         {analytics.alerts.map((alert) => (
                             <Alert key={alert.id} variant="destructive" className="bg-red-50 border-red-200">
@@ -70,13 +72,13 @@ export default function AnalyticsDashboard() {
 
             {/* --- PERFORMANCE OVERVIEW SECTION --- */}
             <section className="space-y-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Weekly Performance</h2>
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("weeklyPerformance")}</h2>
 
                 {/* Yield Card */}
                 <Card className="shadow-sm border-gray-200">
                     <CardContent className="p-5 flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground mb-1">Total Yield (7 Days)</p>
+                            <p className="text-sm text-muted-foreground mb-1">{t("totalYield7Days")}</p>
                             <p className="text-3xl font-bold">{analytics.totalYield.toFixed(1)} <span className="text-lg font-normal text-muted-foreground">L</span></p>
                         </div>
                         <div className="bg-blue-50 p-3 rounded-full">
@@ -89,7 +91,7 @@ export default function AnalyticsDashboard() {
                 <Card className="shadow-sm border-gray-200">
                     <CardContent className="p-5 flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground mb-1">Total Feed Consumed</p>
+                            <p className="text-sm text-muted-foreground mb-1">{t("totalFeedConsumed")}</p>
                             <p className="text-3xl font-bold">{analytics.totalFeed.toFixed(1)} <span className="text-lg font-normal text-muted-foreground">kg</span></p>
                         </div>
                         <div className="bg-emerald-50 p-3 rounded-full">
@@ -102,8 +104,8 @@ export default function AnalyticsDashboard() {
                 <Card className="shadow-sm border-gray-200">
                     <CardContent className="p-5 flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground mb-1">Active Monitored Herd</p>
-                            <p className="text-3xl font-bold">{animals.length} <span className="text-lg font-normal text-muted-foreground">Head</span></p>
+                            <p className="text-sm text-muted-foreground mb-1">{t("activeMonitoredHerd")}</p>
+                            <p className="text-3xl font-bold">{animals.length} <span className="text-lg font-normal text-muted-foreground">{t("head")}</span></p>
                         </div>
                         <div className="bg-purple-50 p-3 rounded-full">
                             <Activity className="w-7 h-7 text-purple-500" />
