@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useLanguage } from "@/contexts/LanguageContext"
+import Link from "next/link"
 import {
   TrendingUp,
   Milk,
@@ -210,6 +211,22 @@ function LogYieldModal({ onClose }: { onClose: () => void }) {
     const { name, value } = e.target
     setForm((prev) => {
       const next = { ...prev, [name]: value }
+      
+      // If animal changes, auto-switch product type to match species
+      if (name === "animal_id") {
+          const selectedAnimal = animals?.find(a => a.tagId === value);
+          if (selectedAnimal) {
+              if (selectedAnimal.species === "Bovine") {
+                  next.product_type = "milk";
+              } else if (selectedAnimal.species === "Poultry") {
+                  next.product_type = "eggs";
+              } else if (selectedAnimal.species === "Porcine") {
+                  next.product_type = "meat";
+              }
+              next.unit = DEFAULT_UNIT[next.product_type];
+          }
+      }
+      
       // Auto-switch unit when product type changes
       if (name === "product_type") {
         next.unit = DEFAULT_UNIT[value as LocalProductionYield["product_type"]]
@@ -334,9 +351,39 @@ function LogYieldModal({ onClose }: { onClose: () => void }) {
               onChange={handleChange}
               className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900"
             >
-              <option value="milk">🥛 Milk</option>
-              <option value="eggs">🥚 Eggs</option>
-              <option value="meat">🥩 Meat</option>
+              {(() => {
+                const selectedAnimal = animals?.find(a => a.tagId === form.animal_id)
+                const species = selectedAnimal?.species
+                
+                if (species === "Bovine") {
+                    return (
+                        <>
+                            <option value="milk">🥛 Milk</option>
+                            <option value="meat">🥩 Meat</option>
+                        </>
+                    )
+                } else if (species === "Poultry") {
+                    return (
+                        <>
+                            <option value="eggs">🥚 Eggs</option>
+                            <option value="meat">🥩 Meat</option>
+                        </>
+                    )
+                } else if (species === "Porcine") {
+                    return (
+                        <option value="meat">🥩 Meat</option>
+                    )
+                }
+                
+                // Fallback if no animal selected yet
+                return (
+                    <>
+                      <option value="milk">🥛 Milk</option>
+                      <option value="eggs">🥚 Eggs</option>
+                      <option value="meat">🥩 Meat</option>
+                    </>
+                )
+              })()}
             </select>
           </div>
 
@@ -457,14 +504,23 @@ export default function ProductionPage() {
             Daily milk, egg, and meat collection records.
           </p>
         </div>
-        <Button
-          id="log-yield-btn"
-          onClick={() => setShowModal(true)}
-          className="bg-emerald-900 hover:bg-emerald-800 text-white font-bold shrink-0 gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Log Yield
-        </Button>
+        <div className="flex gap-2">
+          <Link href="/dashboard/production/batch">
+            <Button
+              className="bg-turmeric hover:bg-turmeric/90 text-ink font-bold shrink-0"
+            >
+              Batch Entry
+            </Button>
+          </Link>
+          <Button
+            id="log-yield-btn"
+            onClick={() => setShowModal(true)}
+            className="bg-paddy hover:bg-paddy/90 text-white font-bold shrink-0 gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Log Yield
+          </Button>
+        </div>
       </div>
 
       {/* Summary Stat Pills */}

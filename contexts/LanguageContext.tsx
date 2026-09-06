@@ -131,6 +131,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     const storedLang = localStorage.getItem('agriherd_language') as Language;
     if (storedLang && (storedLang === 'en' || storedLang === 'si')) {
       setLanguage(storedLang);
+      document.documentElement.lang = storedLang;
+    } else {
+      document.documentElement.lang = 'en';
     }
   }, []);
 
@@ -138,6 +141,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setLanguage((prev) => {
       const newLang = prev === 'en' ? 'si' : 'en';
       localStorage.setItem('agriherd_language', newLang);
+      document.documentElement.lang = newLang;
       return newLang;
     });
   }, []);

@@ -2,10 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Activity, Droplets, Zap, AlertCircle, Loader2 } from "lucide-react"
+import { Activity, Droplets, Zap, AlertCircle, Loader2, Beef, Bird, PiggyBank } from "lucide-react"
 import { useLiveQuery } from "dexie-react-hooks"
 import { db } from "@/lib/db"
 import { useLanguage } from "@/contexts/LanguageContext"
+import { SyncStatus } from "@/components/agriherd/SyncStatus"
+import { LedgerRow } from "@/components/agriherd/LedgerRow"
+import { AlertFlag } from "@/components/agriherd/AlertFlag"
+import { TagBadge } from "@/components/agriherd/TagBadge"
 
 export default function DashboardOverview() {
     const { t } = useLanguage()
@@ -30,9 +34,60 @@ export default function DashboardOverview() {
     }, [])
 
     // Fetch live data directly from the local Dexie database
-    const animalCount = useLiveQuery(() => db.animals.count(), [], undefined)
+    const animals = useLiveQuery(() => db.animals.toArray())
     const pendingCount = useLiveQuery(() => db.animals.where('syncStatus').equals('pending').count(), [], undefined)
     const healthMetrics = useLiveQuery(() => db.healthMetrics.toArray())
+    const vaccinations = useLiveQuery(() => db.vaccinations.toArray())
+    
+    let cattleCount = 0;
+    let pigCount = 0;
+    let poultryCount = 0;
+    let cattleTag = '';
+    let pigTag = '';
+    let poultryTag = '';
+    let totalAnimalCount = 0;
+    
+    if (animals) {
+        totalAnimalCount = animals.length;
+        animals.forEach(a => {
+            if (a.species === "Bovine") { cattleCount++; cattleTag = cattleTag || a.tagId; }
+            else if (a.species === "Porcine") { pigCount++; pigTag = pigTag || a.tagId; }
+            else if (a.species === "Poultry") { poultryCount += (a.flock_size || 1); poultryTag = poultryTag || a.tagId; }
+        });
+    }
+
+    const alerts: any[] = [];
+    if (healthMetrics) {
+        healthMetrics.forEach((metric) => {
+            const animal = animals?.find(a => a.tagId === metric.animalTagId);
+            const species = animal?.species || 'Unknown';
+            let highTempThreshold = species === "Poultry" ? 42.0 : 39.5;
+            
+            if (metric.temperature > highTempThreshold) {
+                alerts.push({
+                    id: `hm-${metric.id}`,
+                    tagId: metric.animalTagId,
+                    title: "High Fever Detected",
+                    detail: `Temp: ${metric.temperature}°C`
+                });
+            }
+        });
+    }
+
+    if (vaccinations) {
+        vaccinations.forEach(v => {
+            // Also checking if the date is passed
+            const isOverdue = v.status === 'overdue' || new Date(v.next_due_date) < new Date();
+            if (isOverdue) {
+                alerts.push({
+                    id: `v-${v.id}`,
+                    tagId: v.animal_id,
+                    title: "Overdue Treatment",
+                    detail: `${v.name} (${v.type}) overdue`
+                });
+            }
+        });
+    }
 
     // Dynamic Calculations
     const today = new Date().toISOString().split("T")[0] // e.g., "2026-09-02"
@@ -55,102 +110,100 @@ export default function DashboardOverview() {
                 </div>
                 {/* Network Status Indicator Badge */}
                 <div className="flex items-center">
-                    {isOnline ? (
-                        <span className="flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-full">
-                            <div className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
-                            Online - Synced
-                        </span>
-                    ) : (
-                        <span className="flex items-center gap-1.5 bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1.5 rounded-full">
-                            <div className="h-2 w-2 rounded-full bg-amber-600" />
-                            Offline - Queuing Data
-                        </span>
-                    )}
+                    <SyncStatus state={isOnline && pendingCount === 0 ? "synced" : "queued"} />
                 </div>
             </div>
 
-            {/* Metric Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            {/* Active Alerts */}
+            {alerts.length > 0 && (
+                <div className="space-y-3">
+                    {alerts.map(alert => (
+                        <AlertFlag 
+                            key={alert.id}
+                            title={alert.title}
+                            detail={alert.detail}
+                            tagId={alert.tagId}
+                        />
+                    ))}
+                </div>
+            )}
 
-                {/* Dynamic Active Herd Card */}
+            {/* Ledger Summary Strip */}
+            <div className="bg-husk/20 rounded-md p-4 space-y-1">
+                <LedgerRow 
+                    label={t("activeHerd") || "Active Herd"} 
+                    value={totalAnimalCount === 0 ? "0" : totalAnimalCount} 
+                />
+                <LedgerRow 
+                    label={t("dailyYield") || "Today's Yield"} 
+                    value={`${totalDailyYield.toFixed(1)} L`} 
+                    valueClassName="text-turmeric" 
+                />
+                <LedgerRow 
+                    label={t("pendingSync") || "Pending Sync"} 
+                    value={pendingCount === undefined ? "0" : pendingCount} 
+                    valueClassName={pendingCount && pendingCount > 0 ? "text-laterite" : "text-paddy"}
+                />
+            </div>
+
+            {/* Species Breakdown */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-500">{t("activeHerd")}</CardTitle>
-                        <Activity className="h-4 w-4 text-emerald-600" />
+                        <CardTitle className="text-sm font-medium text-ink/70">Cattle</CardTitle>
+                        <Beef className="h-4 w-4 text-laterite" />
                     </CardHeader>
                     <CardContent>
-                        {animalCount === undefined ? (
-                            <div className="flex items-center text-gray-400 mt-1">
+                        {animals === undefined ? (
+                            <div className="flex items-center text-ink/50 mt-1">
                                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                                <span className="text-sm">Loading...</span>
                             </div>
                         ) : (
-                            <>
-                                <div className="text-3xl font-bold text-gray-900">{animalCount}</div>
-                                <p className="text-xs text-gray-500 mt-1">{t("totalRegistered")}</p>
-                            </>
+                            <div className="flex flex-col gap-2 mt-2">
+                                <span className="text-3xl font-bold font-mono text-ink">{cattleCount}</span>
+                                {cattleTag && <div><TagBadge tagId={cattleTag} /></div>}
+                            </div>
                         )}
                     </CardContent>
                 </Card>
 
-                {/* Dynamic Daily Yield Card */}
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-500">{t("dailyYield")}</CardTitle>
-                        <Droplets className="h-4 w-4 text-blue-500" />
+                        <CardTitle className="text-sm font-medium text-ink/70">Pigs</CardTitle>
+                        <PiggyBank className="h-4 w-4 text-laterite" />
                     </CardHeader>
                     <CardContent>
-                        {healthMetrics === undefined ? (
-                            <div className="flex items-center text-gray-400 mt-1">
+                        {animals === undefined ? (
+                            <div className="flex items-center text-ink/50 mt-1">
                                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                                <span className="text-sm">Loading...</span>
                             </div>
                         ) : (
-                            <>
-                                <div className="text-3xl font-bold text-gray-900">{totalDailyYield.toFixed(1)}</div>
-                                <p className="text-xs text-emerald-600 font-medium mt-1">{t("liveCalc")}</p>
-                            </>
+                            <div className="flex flex-col gap-2 mt-2">
+                                <span className="text-3xl font-bold font-mono text-ink">{pigCount}</span>
+                                {pigTag && <div><TagBadge tagId={pigTag} /></div>}
+                            </div>
                         )}
                     </CardContent>
                 </Card>
 
-                {/* System Health Card (Dynamic Pending Sync Status) */}
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-500">{t("systemHealth")}</CardTitle>
-                        <Zap className={`h-4 w-4 ${isOnline ? "text-emerald-500" : "text-amber-500"}`} />
+                        <CardTitle className="text-sm font-medium text-ink/70">Poultry</CardTitle>
+                        <Bird className="h-4 w-4 text-laterite" />
                     </CardHeader>
                     <CardContent>
-                        {pendingCount === undefined ? (
-                            <div className="flex items-center text-gray-400 mt-1">
+                        {animals === undefined ? (
+                            <div className="flex items-center text-ink/50 mt-1">
                                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                                <span className="text-sm">Loading...</span>
                             </div>
                         ) : (
-                            <>
-                                <div className={`text-3xl font-bold ${pendingCount === 0 ? "text-emerald-600" : "text-amber-600"}`}>
-                                    {pendingCount}
-                                </div>
-                                <p className="text-xs text-gray-500 mt-1">
-                                    {t("pendingSync")}
-                                </p>
-                            </>
+                            <div className="flex flex-col gap-2 mt-2">
+                                <span className="text-3xl font-bold font-mono text-ink">{poultryCount}</span>
+                                {poultryTag && <div><TagBadge tagId={poultryTag} /></div>}
+                            </div>
                         )}
                     </CardContent>
                 </Card>
-
-                {/* Active Alerts Card (Static for now) */}
-                <Card className="bg-red-50/50 border-red-100">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-red-800">{t("activeAlerts")}</CardTitle>
-                        <AlertCircle className="h-4 w-4 text-red-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-red-700">0</div>
-                        <p className="text-xs text-red-600 mt-1">{t("immediateAttention")}</p>
-                    </CardContent>
-                </Card>
-
             </div>
         </div>
     )

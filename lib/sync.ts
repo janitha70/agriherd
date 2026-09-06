@@ -29,6 +29,16 @@ export async function processSyncQueue() {
                 targetTable = 'vaccinations';
             } else if (item.actionType === 'LOG_YIELD' || item.table === 'production_yields') {
                 targetTable = 'production_yields';
+            } else if (item.actionType === 'ADD_EXPENSE' || item.actionType === 'UPDATE_EXPENSE' || item.actionType === 'DELETE_EXPENSE' || item.table === 'expenses') {
+                targetTable = 'expenses';
+            } else if (item.actionType === 'ADD_INCOME' || item.actionType === 'UPDATE_INCOME' || item.actionType === 'DELETE_INCOME' || item.table === 'farm_income') {
+                targetTable = 'farm_income';
+            } else if (item.actionType === 'SET_BUDGET' || item.actionType === 'UPDATE_BUDGET' || item.table === 'budgets') {
+                targetTable = 'budgets';
+            } else if (item.actionType === 'ADD_SUPPLIER' || item.actionType === 'UPDATE_SUPPLIER' || item.actionType === 'DELETE_SUPPLIER' || item.table === 'suppliers') {
+                targetTable = 'suppliers';
+            } else if (item.actionType === 'ADD_RECURRING_EXPENSE' || item.actionType === 'UPDATE_RECURRING_EXPENSE' || item.actionType === 'DELETE_RECURRING_EXPENSE' || item.table === 'recurring_expenses') {
+                targetTable = 'recurring_expenses';
             } else {
                 // 5. Fallback for unknown action types
                 console.error(`Unknown action type or table encountered for item ${item.id}. Deleting to unblock sync queue.`);
@@ -122,11 +132,13 @@ export async function processSyncQueue() {
                     }
                     insertPayload.animal_id = lsRow.id;
                 }
-            } else if (targetTable === 'production_yields') {
-                // ── Production Yields normalisation ──────────────────────────────
+            } else if (targetTable === 'production_yields' || targetTable === 'expenses' || targetTable === 'farm_income' || targetTable === 'budgets' || targetTable === 'suppliers' || targetTable === 'recurring_expenses') {
+                // ── Common normalisation for record_id based tables ──────────────────────────────
                 // `record_id` is the stable UUID used as the Supabase conflict key.
                 delete insertPayload.syncStatus;
                 delete insertPayload.id;
+                delete insertPayload.createdAt;
+                delete insertPayload.updatedAt;
             }
 
             // The Schema Recovery Loop
@@ -138,13 +150,28 @@ export async function processSyncQueue() {
             while (true) {
                 // Route each table to the correct Supabase operation
                 let result;
-                if (targetTable === 'livestock') {
+                if (item.actionType && item.actionType.startsWith('DELETE_')) {
+                    const deleteId = insertPayload.record_id || insertPayload.id;
+                    if (!deleteId) {
+                        result = { error: { message: `Missing record_id for deletion in ${targetTable}` } } as any;
+                    } else {
+                        result = await supabase.from(targetTable).delete().eq('id', deleteId);
+                    }
+                } else if (targetTable === 'livestock') {
                     result = await supabase.from('livestock').upsert(insertPayload, { onConflict: 'tag_number' });
                 } else if (targetTable === 'health_metrics') {
                     result = await supabase.from('health_metrics').upsert(insertPayload, { onConflict: 'id' });
-                } else if (targetTable === 'vaccinations' || targetTable === 'production_yields') {
-                    // Both tables use record_id as the stable upsert conflict key
-                    if (vacConflictKey) {
+                } else if (targetTable === 'vaccinations' || targetTable === 'production_yields' || targetTable === 'expenses' || targetTable === 'farm_income' || targetTable === 'budgets' || targetTable === 'suppliers' || targetTable === 'recurring_expenses') {
+                    // These tables use record_id (or similar) as the stable upsert conflict key
+                    // For expenses tables, we use id instead of record_id on Supabase (since we map record_id to id)
+                    // Let's ensure id is mapped correctly if it's the uuid
+                    if (targetTable === 'expenses' || targetTable === 'farm_income' || targetTable === 'budgets' || targetTable === 'suppliers' || targetTable === 'recurring_expenses') {
+                        if (insertPayload.record_id) {
+                            insertPayload.id = insertPayload.record_id;
+                            delete insertPayload.record_id;
+                        }
+                        result = await supabase.from(targetTable).upsert(insertPayload, { onConflict: 'id' });
+                    } else if (vacConflictKey) {
                         result = await supabase.from(targetTable).upsert(insertPayload, { onConflict: vacConflictKey });
                     } else {
                         console.warn(`Supabase '${targetTable}' table is missing 'record_id'. Falling back to plain insert.`);
@@ -158,15 +185,27 @@ export async function processSyncQueue() {
 
                 if (!error) {
                     // Insertion successful: partial-update local store and clear queue item
-                    if (targetTable === 'livestock' && localId) {
-                        await db.animals.update(localId, { syncStatus: 'synced' });
-                    } else if (targetTable === 'health_metrics' && localId) {
-                        await db.healthMetrics.update(localId, { syncStatus: 'synced' });
-                    } else if (targetTable === 'vaccinations' && localId) {
-                        // Partial update — only flip syncStatus; do not overwrite the full record
-                        await db.vaccinations.update(localId, { syncStatus: 'synced' });
-                    } else if (targetTable === 'production_yields' && localId) {
-                        await db.production_yields.update(localId, { syncStatus: 'synced' });
+                    if (!item.actionType || !item.actionType.startsWith('DELETE_')) {
+                        if (targetTable === 'livestock' && localId) {
+                            await db.animals.update(localId, { syncStatus: 'synced' });
+                        } else if (targetTable === 'health_metrics' && localId) {
+                            await db.healthMetrics.update(localId, { syncStatus: 'synced' });
+                        } else if (targetTable === 'vaccinations' && localId) {
+                            // Partial update — only flip syncStatus; do not overwrite the full record
+                            await db.vaccinations.update(localId, { syncStatus: 'synced' });
+                        } else if (targetTable === 'production_yields' && localId) {
+                            await db.production_yields.update(localId, { syncStatus: 'synced' });
+                        } else if (targetTable === 'expenses' && localId) {
+                            await db.expenses.update(localId, { syncStatus: 'synced' });
+                        } else if (targetTable === 'farm_income' && localId) {
+                            await db.farmIncome.update(localId, { syncStatus: 'synced' });
+                        } else if (targetTable === 'budgets' && localId) {
+                            await db.budgets.update(localId, { syncStatus: 'synced' });
+                        } else if (targetTable === 'suppliers' && localId) {
+                            await db.suppliers.update(localId, { syncStatus: 'synced' });
+                        } else if (targetTable === 'recurring_expenses' && localId) {
+                            await db.recurringExpenses.update(localId, { syncStatus: 'synced' });
+                        }
                     }
                     if (item.id) {
                         await db.syncQueue.delete(item.id);
@@ -227,6 +266,7 @@ export async function hydrateLocalDatabase() {
             // Explicitly carry photo_data from the cloud record.
             // Omitting this field is what caused down-sync to silently erase photos.
             photo_data: animal.photo_data ?? undefined,
+            flock_size: animal.flock_size ?? undefined,
             syncStatus: 'synced' as const,
             createdAt: animal.created_at
         }));
@@ -249,6 +289,7 @@ export async function hydrateLocalDatabase() {
                         breed: animal.breed,
                         dob: animal.dob,
                         photo_data: animal.photo_data,
+                        flock_size: animal.flock_size,
                         syncStatus: 'synced',
                         createdAt: animal.createdAt,
                     });
@@ -349,6 +390,163 @@ export async function hydrateLocalDatabase() {
         } catch (yieldErr) {
             console.error('Failed to hydrate production_yields:', yieldErr);
         }
+
+        // ── Pull expenses from Supabase ─────────────────────────────
+        try {
+            const { data: cloudExpenses, error: expensesError } = await supabase.from('expenses').select('*');
+            if (!expensesError && cloudExpenses && cloudExpenses.length > 0) {
+                await db.transaction('rw', db.expenses, async () => {
+                    for (const e of cloudExpenses) {
+                        const existing = await db.expenses.where('record_id').equals(e.id).first();
+                        const payload = {
+                            record_id: e.id,
+                            category_id: e.category_id,
+                            title: e.title,
+                            amount: e.amount,
+                            expense_date: e.expense_date,
+                            payment_method: e.payment_method,
+                            notes: e.notes ?? undefined,
+                            animal_tag_id: e.animal_tag_id ?? undefined,
+                            season: e.season ?? undefined,
+                            receipt_url: e.receipt_url ?? undefined,
+                            receipt_data: e.receipt_data ?? undefined,
+                            supplier_id: e.supplier_id ?? undefined,
+                            invoice_number: e.invoice_number ?? undefined,
+                            payment_status: e.payment_status ?? undefined,
+                            paid_amount: e.paid_amount ?? undefined,
+                            is_recurring: e.is_recurring ?? false,
+                            recurrence_interval: e.recurrence_interval ?? undefined,
+                            syncStatus: 'synced' as const,
+                            createdAt: e.created_at,
+                            updatedAt: e.updated_at
+                        };
+                        if (existing?.id) {
+                            await db.expenses.update(existing.id, payload);
+                        } else {
+                            await db.expenses.add(payload);
+                        }
+                    }
+                });
+            }
+        } catch (err) {
+            console.error('Failed to hydrate expenses:', err);
+        }
+        
+        // ── Pull expense categories from Supabase ─────────────────────────────
+        try {
+            const { data: cloudCategories, error: categoriesError } = await supabase.from('expense_categories').select('*');
+            if (!categoriesError && cloudCategories && cloudCategories.length > 0) {
+                await db.transaction('rw', db.expenseCategories, async () => {
+                    for (const c of cloudCategories) {
+                        const existing = await db.expenseCategories.where('id').equals(c.id).first();
+                        const payload = {
+                            id: c.id,
+                            name: c.name,
+                            icon: c.icon ?? undefined,
+                            color: c.color ?? undefined,
+                            syncStatus: 'synced' as const
+                        };
+                        if (existing?.id) {
+                            await db.expenseCategories.update(existing.id, payload);
+                        } else {
+                            await db.expenseCategories.add(payload);
+                        }
+                    }
+                });
+            }
+        } catch (err) {
+            console.error('Failed to hydrate expense categories:', err);
+        }
+
+        // ── Pull farm income from Supabase ─────────────────────────────
+        try {
+            const { data: cloudIncome, error: incomeError } = await supabase.from('farm_income').select('*');
+            if (!incomeError && cloudIncome && cloudIncome.length > 0) {
+                await db.transaction('rw', db.farmIncome, async () => {
+                    for (const i of cloudIncome) {
+                        const existing = await db.farmIncome.where('record_id').equals(i.id).first();
+                        const payload = {
+                            record_id: i.id,
+                            source: i.source,
+                            amount: i.amount,
+                            income_date: i.income_date,
+                            notes: i.notes ?? undefined,
+                            season: i.season ?? undefined,
+                            syncStatus: 'synced' as const,
+                            createdAt: i.created_at
+                        };
+                        if (existing?.id) {
+                            await db.farmIncome.update(existing.id, payload);
+                        } else {
+                            await db.farmIncome.add(payload);
+                        }
+                    }
+                });
+            }
+        } catch (err) {
+            console.error('Failed to hydrate farm income:', err);
+        }
+
+        // ── Pull suppliers from Supabase ─────────────────────────────
+        try {
+            const { data: cloudSuppliers, error: suppliersError } = await supabase.from('suppliers').select('*');
+            if (!suppliersError && cloudSuppliers && cloudSuppliers.length > 0) {
+                await db.transaction('rw', db.suppliers, async () => {
+                    for (const s of cloudSuppliers) {
+                        const existing = await db.suppliers.where('record_id').equals(s.id).first();
+                        const payload = {
+                            record_id: s.id,
+                            name: s.name,
+                            phone: s.phone ?? undefined,
+                            address: s.address ?? undefined,
+                            notes: s.notes ?? undefined,
+                            syncStatus: 'synced' as const,
+                            createdAt: s.created_at
+                        };
+                        if (existing?.id) {
+                            await db.suppliers.update(existing.id, payload);
+                        } else {
+                            await db.suppliers.add(payload);
+                        }
+                    }
+                });
+            }
+        } catch (err) {
+            console.error('Failed to hydrate suppliers:', err);
+        }
+
+        // ── Pull recurring expenses from Supabase ─────────────────────────────
+        try {
+            const { data: cloudRecurring, error: recurringError } = await supabase.from('recurring_expenses').select('*');
+            if (!recurringError && cloudRecurring && cloudRecurring.length > 0) {
+                await db.transaction('rw', db.recurringExpenses, async () => {
+                    for (const r of cloudRecurring) {
+                        const existing = await db.recurringExpenses.where('record_id').equals(r.id).first();
+                        const payload = {
+                            record_id: r.id,
+                            title: r.title,
+                            category_id: r.category_id,
+                            amount: r.amount,
+                            recurrence_interval: r.frequency ?? r.recurrence_interval ?? 'monthly',
+                            start_date: r.start_date,
+                            next_due_date: r.next_due_date,
+                            is_active: r.is_active ?? true,
+                            notes: r.notes ?? undefined,
+                            syncStatus: 'synced' as const,
+                            createdAt: r.created_at
+                        };
+                        if (existing?.id) {
+                            await db.recurringExpenses.update(existing.id, payload);
+                        } else {
+                            await db.recurringExpenses.add(payload);
+                        }
+                    }
+                });
+            }
+        } catch (err) {
+            console.error('Failed to hydrate recurring expenses:', err);
+        }
+
     } catch (err) {
         console.error('Failed to hydrate local database:', err);
     }

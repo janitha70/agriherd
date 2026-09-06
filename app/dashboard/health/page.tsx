@@ -19,6 +19,7 @@ import {
   Plus,
   AlertTriangle,
 } from "lucide-react"
+import { AlertFlag } from "@/components/agriherd/AlertFlag"
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -44,9 +45,9 @@ function computeStatus(nextDueDate: string): LocalVaccination["status"] {
 
 function StatusBadge({ status, t }: { status: LocalVaccination["status"]; t: (k: string) => string }) {
   const map = {
-    overdue: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",
-    pending: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-    completed: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
+    overdue: "bg-alert-red/10 text-alert-red",
+    pending: "bg-paddy/10 text-paddy",
+    completed: "bg-turmeric/10 text-ink",
   }
   const labelKey = status === "overdue" ? "statusOverdue" : status === "pending" ? "statusPending" : "statusCompleted"
   return (
@@ -98,7 +99,7 @@ function VaccinationCard({
           </div>
           <div>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{t("dueDate")}</p>
-            <p className={`font-semibold ${isOverdue ? "text-red-600 dark:text-red-400" : "text-gray-800 dark:text-gray-200"}`}>
+            <p className={`font-semibold ${isOverdue ? "text-alert-red" : "text-ink"}`}>
               {formatDate(record.next_due_date)}
             </p>
           </div>
@@ -269,7 +270,14 @@ function LogTreatmentModal({ onClose, t }: { onClose: () => void; t: (k: string)
               name="name"
               value={form.name}
               onChange={handleChange}
-              placeholder="e.g. FMD, HS, Albendazole"
+              placeholder={(() => {
+                const selectedAnimal = animals?.find(a => a.tagId === form.animal_id)
+                const species = selectedAnimal?.species
+                if (species === "Bovine") return "e.g. FMD, HS, BQ, Mastitis treatment"
+                if (species === "Porcine") return "e.g. CSF, FMD, PRRS, E. coli"
+                if (species === "Poultry") return "e.g. Newcastle, Marek's, Gumboro"
+                return "e.g. FMD, HS, Albendazole"
+              })()}
             />
           </div>
 
@@ -395,17 +403,17 @@ export default function HealthTrackerPage() {
       {/* Summary Stat Pills */}
       {!isLoading && (
         <div className="flex flex-wrap gap-3">
-          <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2">
-            <ShieldAlert className="h-4 w-4 text-red-500" />
-            <span className="text-sm font-bold text-red-700 dark:text-red-400">{overdue.length} Overdue</span>
+          <div className="flex items-center gap-2 bg-alert-red/10 border border-alert-red/20 rounded-xl px-4 py-2">
+            <ShieldAlert className="h-4 w-4 text-alert-red" />
+            <span className="text-sm font-bold text-alert-red">{overdue.length} Overdue</span>
           </div>
-          <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-2">
-            <CalendarClock className="h-4 w-4 text-amber-500" />
-            <span className="text-sm font-bold text-amber-700 dark:text-amber-400">{upcoming.length} Upcoming</span>
+          <div className="flex items-center gap-2 bg-paddy/10 border border-paddy/20 rounded-xl px-4 py-2">
+            <CalendarClock className="h-4 w-4 text-paddy" />
+            <span className="text-sm font-bold text-paddy">{upcoming.length} Upcoming</span>
           </div>
-          <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl px-4 py-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400">{completed.length} Completed</span>
+          <div className="flex items-center gap-2 bg-turmeric/10 border border-turmeric/20 rounded-xl px-4 py-2">
+            <CheckCircle2 className="h-4 w-4 text-turmeric" />
+            <span className="text-sm font-bold text-ink">{completed.length} Completed</span>
           </div>
         </div>
       )}
@@ -418,24 +426,29 @@ export default function HealthTrackerPage() {
           {/* ── Section 1: Overdue / Action Required ─────────────────── */}
           <section aria-label="Overdue treatments">
             <div className="flex items-center gap-2 mb-3">
-              <ShieldAlert className="h-5 w-5 text-red-500" />
-              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">{t("overdueAlerts")}</h2>
+              <ShieldAlert className="h-5 w-5 text-alert-red" />
+              <h2 className="text-base font-bold text-ink">{t("overdueAlerts")}</h2>
               {overdue.length > 0 && (
-                <span className="ml-auto text-xs font-bold bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full">
+                <span className="ml-auto text-xs font-bold bg-alert-red/10 text-alert-red px-2.5 py-0.5 rounded-full">
                   {overdue.length}
                 </span>
               )}
             </div>
 
             {overdue.length === 0 ? (
-              <div className="flex items-center gap-3 rounded-xl border border-dashed border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/10 px-5 py-4">
-                <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0" />
-                <p className="text-sm text-muted-foreground">{t("noOverdue")}</p>
+              <div className="flex items-center gap-3 rounded-xl border border-dashed border-paddy/30 bg-paddy/5 px-5 py-4">
+                <CheckCircle2 className="h-5 w-5 text-paddy flex-shrink-0" />
+                <p className="text-sm text-ink/70">{t("noOverdue")}</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex flex-col gap-3">
                 {overdue.map((record) => (
-                  <VaccinationCard key={record.id} record={record} displayTag={resolveTag(record.animal_id)} t={t} />
+                  <AlertFlag 
+                    key={record.id} 
+                    title="Overdue Treatment" 
+                    detail={`${record.name} (${t(record.type)}) overdue`} 
+                    tagId={resolveTag(record.animal_id)} 
+                  />
                 ))}
               </div>
             )}

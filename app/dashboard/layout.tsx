@@ -19,7 +19,8 @@ import {
     AlertTriangle,
     Phone,
     ShieldPlus,
-    TrendingUp
+    TrendingUp,
+    Wallet
 } from "lucide-react"
 import { processSyncQueue, hydrateLocalDatabase } from "@/lib/sync"
 import { supabase } from "@/lib/supabase"
@@ -32,6 +33,7 @@ const navigation = [
     { name: "Log Vitals", href: "/dashboard/log-vitals", icon: Activity },
     { name: "Health Tracker", href: "/dashboard/health", icon: ShieldPlus },
     { name: "Production", href: "/dashboard/production", icon: TrendingUp },
+    { name: "Expenses", href: "/dashboard/expenses", icon: Wallet },
     { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ]

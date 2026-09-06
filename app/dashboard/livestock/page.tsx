@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/select"
 import { CloudOff, CheckCircle2, Search, Filter, AlertCircle, PawPrint } from "lucide-react"
 import { useLanguage } from "@/contexts/LanguageContext"
+import { TagBadge } from "@/components/agriherd/TagBadge"
+import { SyncStatus } from "@/components/agriherd/SyncStatus"
 
 export default function LivestockRegistryPage() {
   const { t } = useLanguage()
@@ -184,21 +186,11 @@ export default function LivestockRegistryPage() {
                           {currentStatus}
                         </span>
                       </div>
-                      <CardTitle className="text-xl font-bold tracking-tight">
-                        {animal.tagId}
+                      <CardTitle className="text-xl font-bold tracking-tight mt-1">
+                        <TagBadge tagId={animal.tagId} size="md" />
                       </CardTitle>
                     </div>
-                    {animal.syncStatus === 'pending' ? (
-                      <span className="flex items-center gap-1.5 bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap">
-                        <CloudOff className="h-3.5 w-3.5" />
-                        {t("pendingSyncStatus")}
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        {t("synced")}
-                      </span>
-                    )}
+                    <SyncStatus state={animal.syncStatus === 'pending' ? 'queued' : 'synced'} />
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 gap-4 text-sm mt-2">

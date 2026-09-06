@@ -20,6 +20,7 @@ export default function RegisterAnimal() {
         species: "",
         breed: "",
         dob: "",
+        flock_size: "",
     })
     const [photoBase64, setPhotoBase64] = useState<string | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -62,6 +63,7 @@ export default function RegisterAnimal() {
                 species: formData.species,
                 breed: formData.breed,
                 dob: formData.dob,
+                flock_size: formData.species === "Poultry" && formData.flock_size ? parseInt(formData.flock_size, 10) : undefined,
                 photo_data: photoBase64 || undefined,
                 syncStatus: 'pending' as const,
                 createdAt: new Date().toISOString(),
@@ -85,6 +87,7 @@ export default function RegisterAnimal() {
                     species: "",
                     breed: "",
                     dob: "",
+                    flock_size: "",
                 })
                 setPhotoBase64(null)
                 if (fileInputRef.current) {
@@ -135,22 +138,68 @@ export default function RegisterAnimal() {
                                 className="w-full flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-emerald-900 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 <option value="" disabled>{t("selectSpecies")}</option>
-                                <option value="Bovine">Bovine</option>
-                                <option value="Porcine">Porcine</option>
-                                <option value="Poultry">Poultry</option>
-                                <option value="Ovine">Ovine</option>
+                                <option value="Bovine">Cattle (Bovine)</option>
+                                <option value="Porcine">Pig (Porcine)</option>
+                                <option value="Poultry">Chicken (Poultry)</option>
                             </select>
                         </div>
 
+                        {formData.species === "Poultry" ? (
+                             <div className="space-y-2">
+                                 <Label htmlFor="flock_size">Flock / Batch Size</Label>
+                                 <Input
+                                     id="flock_size"
+                                     type="number"
+                                     min="1"
+                                     placeholder="e.g., 500"
+                                     value={formData.flock_size}
+                                     onChange={handleChange}
+                                     required
+                                 />
+                             </div>
+                        ) : null}
+
                         <div className="space-y-2">
                             <Label htmlFor="breed">{t("breedLabel")}</Label>
-                            <Input
+                            <select
                                 id="breed"
-                                placeholder="e.g., Angus"
                                 value={formData.breed}
                                 onChange={handleChange}
                                 required
-                            />
+                                className="w-full flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-emerald-900 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                <option value="" disabled>Select Breed</option>
+                                {formData.species === "Bovine" && (
+                                    <>
+                                        <option value="Friesian">Friesian</option>
+                                        <option value="Jersey">Jersey</option>
+                                        <option value="Brown Swiss">Brown Swiss</option>
+                                        <option value="Sahiwal">Sahiwal</option>
+                                        <option value="Local Zebu">Local Zebu</option>
+                                        <option value="Other">Other</option>
+                                    </>
+                                )}
+                                {formData.species === "Porcine" && (
+                                    <>
+                                        <option value="Large White">Large White</option>
+                                        <option value="Landrace">Landrace</option>
+                                        <option value="Duroc">Duroc</option>
+                                        <option value="Hampshire">Hampshire</option>
+                                        <option value="Local Mixed">Local Mixed</option>
+                                        <option value="Other">Other</option>
+                                    </>
+                                )}
+                                {formData.species === "Poultry" && (
+                                    <>
+                                        <option value="Broiler">Broiler</option>
+                                        <option value="Layer (White Leghorn)">Layer (White Leghorn)</option>
+                                        <option value="Dual Purpose">Dual Purpose</option>
+                                        <option value="Indigenous/Desi">Indigenous/Desi</option>
+                                        <option value="Other">Other</option>
+                                    </>
+                                )}
+                                {!formData.species && <option value="Other">Please select a species first</option>}
+                            </select>
                         </div>
 
                         <div className="space-y-2">
@@ -176,11 +225,11 @@ export default function RegisterAnimal() {
                             onChange={handleFileChange}
                         />
                         <div
-                            className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer ${photoBase64 ? 'border-emerald-500 bg-emerald-50' : 'border-gray-300 hover:bg-gray-50'}`}
+                            className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer ${photoBase64 ? 'border-paddy bg-paddy/10' : 'border-paddy/30 hover:bg-husk/30'}`}
                             onClick={() => fileInputRef.current?.click()}
                         >
                             {isCompressing ? (
-                                <p className="text-sm font-medium text-emerald-700 animate-pulse">{t("compressingPhoto")}</p>
+                                <p className="text-sm font-medium text-paddy animate-pulse">{t("compressingPhoto")}</p>
                             ) : photoBase64 ? (
                                 <div className="relative w-full h-48 sm:h-64 rounded-lg overflow-hidden group">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -213,10 +262,10 @@ export default function RegisterAnimal() {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="bg-emerald-100 p-3 rounded-full mb-4">
-                                        <UploadCloud className="h-6 w-6 text-emerald-700" />
+                                    <div className="bg-paddy/10 p-3 rounded-full mb-4">
+                                        <UploadCloud className="h-6 w-6 text-paddy" />
                                     </div>
-                                    <p className="text-sm font-medium text-gray-900 mb-1">
+                                    <p className="text-sm font-medium text-ink mb-1">
                                         {t("tapToUpload")}
                                     </p>
                                     <p className="text-xs text-gray-500">
@@ -227,14 +276,14 @@ export default function RegisterAnimal() {
                         </div>
                     </div>
                 </CardContent>
-                <CardFooter className="flex justify-end gap-3 border-t pt-6">
+                <CardFooter className="flex justify-end gap-3 border-t border-husk pt-6">
                     <Link href="/dashboard/livestock">
                         <Button variant="outline" className="font-medium" type="button">{t("cancel")}</Button>
                     </Link>
                     <Button
                         type="submit"
                         disabled={isSubmitting || isCompressing}
-                        className="bg-emerald-900 hover:bg-emerald-800 text-white font-bold px-8"
+                        className="bg-turmeric hover:bg-turmeric/90 text-ink font-bold px-8"
                     >
                         {isSubmitting ? t("saving") : t("registerAnimalTitle")}
                     </Button>
