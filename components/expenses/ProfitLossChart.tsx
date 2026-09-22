@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { LocalExpense, LocalFarmIncome } from '@/lib/types/expenses'
 import { format, parseISO } from 'date-fns'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface ProfitLossChartProps {
   expenses: LocalExpense[]
@@ -12,6 +13,7 @@ interface ProfitLossChartProps {
 }
 
 export function ProfitLossChart({ expenses, income }: ProfitLossChartProps) {
+  const { t } = useLanguage()
   // Group by month
   const dataMap = new Map<string, { month: string; expenses: number; income: number }>()
 
@@ -40,7 +42,7 @@ export function ProfitLossChart({ expenses, income }: ProfitLossChartProps) {
   return (
     <Card className="border-none shadow-sm">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-gray-800">Income vs Expenses (ආදායම් සහ වියදම්)</CardTitle>
+        <CardTitle className="text-lg font-semibold text-gray-800">{t('chartIncomeVsExpenses')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full">
@@ -71,8 +73,8 @@ export function ProfitLossChart({ expenses, income }: ProfitLossChartProps) {
                   formatter={(value: any) => [`Rs. ${value.toLocaleString()}`, undefined]}
                 />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                <Bar dataKey="income" name="Income (ආදායම)" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                <Bar dataKey="expenses" name="Expenses (වියදම)" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="income" name={t('chartIncome')} fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="expenses" name={t('chartExpenses')} fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
           )}

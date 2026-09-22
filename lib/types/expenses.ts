@@ -47,7 +47,6 @@ export interface LocalExpense {
   invoice_number?: string
   notes?: string
   animal_tag_id?: string
-  season?: string
   receipt_url?: string
   receipt_data?: string // Base64 image data
   is_recurring: boolean
@@ -64,7 +63,6 @@ export interface LocalFarmIncome {
   amount: number
   income_date: string
   notes?: string
-  season?: string
   syncStatus: 'pending' | 'synced'
   createdAt: string
   updatedAt?: string
@@ -74,7 +72,6 @@ export interface LocalBudget {
   id?: number
   record_id: string // UUID
   category_id: string
-  season: string
   month?: string
   budget_amount: number
   syncStatus: 'pending' | 'synced'

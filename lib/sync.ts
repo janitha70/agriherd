@@ -407,7 +407,6 @@ export async function hydrateLocalDatabase() {
                             payment_method: e.payment_method,
                             notes: e.notes ?? undefined,
                             animal_tag_id: e.animal_tag_id ?? undefined,
-                            season: e.season ?? undefined,
                             receipt_url: e.receipt_url ?? undefined,
                             receipt_data: e.receipt_data ?? undefined,
                             supplier_id: e.supplier_id ?? undefined,
@@ -471,7 +470,6 @@ export async function hydrateLocalDatabase() {
                             amount: i.amount,
                             income_date: i.income_date,
                             notes: i.notes ?? undefined,
-                            season: i.season ?? undefined,
                             syncStatus: 'synced' as const,
                             createdAt: i.created_at
                         };

@@ -4,8 +4,10 @@ import React, { useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
 import { Bell, AlertTriangle, Info, CheckCircle2 } from 'lucide-react'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export function FinancialAlerts() {
+  const { t } = useLanguage()
   const expenses = useLiveQuery(() => db.expenses.toArray()) || []
   const budgets = useLiveQuery(() => db.budgets.toArray()) || []
   const recurring = useLiveQuery(() => db.recurringExpenses.toArray()) || []
@@ -26,14 +28,14 @@ export function FinancialAlerts() {
           list.push({
             id: `budget-exceeded-${b.category_id}`,
             type: 'warning',
-            title: 'Budget Exceeded',
+            title: 'budgetExceeded',
             message: `You have exceeded the budget for ${b.category_id}.`
           })
         } else if (percent >= 80) {
           list.push({
             id: `budget-near-${b.category_id}`,
             type: 'info',
-            title: 'Near Budget Limit',
+            title: 'nearBudgetLimit',
             message: `You have used ${percent.toFixed(0)}% of the budget for ${b.category_id}.`
           })
         }
@@ -46,7 +48,7 @@ export function FinancialAlerts() {
       list.push({
         id: 'unpaid-invoices',
         type: 'warning',
-        title: 'Unpaid Invoices',
+        title: 'unpaidInvoices',
         message: `You have ${unpaid.length} partially paid invoices that need attention.`
       })
     }
@@ -64,7 +66,7 @@ export function FinancialAlerts() {
       list.push({
         id: 'upcoming-recurring',
         type: 'info',
-        title: 'Upcoming Expenses',
+        title: 'upcomingExpenses',
         message: `You have ${upcoming.length} recurring expenses due within the next 7 days.`
       })
     }
@@ -77,11 +79,11 @@ export function FinancialAlerts() {
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full">
         <div className="flex items-center gap-2 mb-4">
           <Bell className="w-5 h-5 text-gray-400" />
-          <h3 className="font-bold text-gray-900">Financial Alerts</h3>
+          <h3 className="font-bold text-gray-900">{t('financialAlerts')}</h3>
         </div>
         <div className="flex items-center justify-center h-[200px] flex-col bg-gray-50 rounded-xl text-sm text-gray-500">
           <CheckCircle2 className="w-8 h-8 mb-2 text-emerald-400" />
-          No pending alerts. You are on track!
+          {t('noAlerts')}
         </div>
       </div>
     )
@@ -91,7 +93,7 @@ export function FinancialAlerts() {
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full">
       <div className="flex items-center gap-2 mb-4">
         <Bell className="w-5 h-5 text-amber-500" />
-        <h3 className="font-bold text-gray-900">Financial Alerts</h3>
+        <h3 className="font-bold text-gray-900">{t('financialAlerts')}</h3>
         <span className="bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full text-xs font-bold ml-auto">
           {alerts.length}
         </span>
@@ -107,7 +109,7 @@ export function FinancialAlerts() {
               {alert.type === 'warning' ? <AlertTriangle className="w-4 h-4 text-rose-500" /> : <Info className="w-4 h-4 text-blue-500" />}
             </div>
             <div>
-              <p className="font-semibold text-sm">{alert.title}</p>
+              <p className="font-semibold text-sm">{t(alert.title)}</p>
               <p className={`text-xs mt-0.5 ${alert.type === 'warning' ? 'text-rose-700' : 'text-blue-700'}`}>
                 {alert.message}
               </p>

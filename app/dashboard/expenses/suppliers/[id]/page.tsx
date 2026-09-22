@@ -57,7 +57,7 @@ export default function VendorLedgerPage() {
 
           const updates = {
               paid_amount: newPaid,
-              payment_status: isFullyPaid ? 'paid' : 'partially_paid',
+              payment_status: (isFullyPaid ? 'paid' : 'partially_paid') as 'paid' | 'partially_paid',
               updatedAt: new Date().toISOString()
           }
 

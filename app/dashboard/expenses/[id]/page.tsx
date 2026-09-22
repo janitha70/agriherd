@@ -183,10 +183,6 @@ export default function ExpenseDetailPage() {
                 <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Metadata</h3>
                 <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
-                        <span className="text-gray-500">Season</span>
-                        <span className="font-medium text-gray-900">{expense.season || 'N/A'}</span>
-                    </div>
-                    <div className="flex justify-between">
                         <span className="text-gray-500">Recurring</span>
                         <span className="font-medium text-gray-900">{expense.is_recurring ? 'Yes' : 'No'}</span>
                     </div>

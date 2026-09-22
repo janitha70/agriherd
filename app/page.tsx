@@ -32,7 +32,7 @@ export default function CommercialLandingPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans">
+    <div className="min-h-screen flex flex-col font-sans">
       <Navbar onOpenAuth={() => setIsAuthModalOpen(true)} isAuthenticated={isAuthenticated} />
       <HeroSection onOpenAuth={() => setIsAuthModalOpen(true)} />
       <TrustBar />

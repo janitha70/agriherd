@@ -4,8 +4,10 @@ import React, { useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
 import { Droplet, TrendingDown, TrendingUp } from 'lucide-react'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export function CostPerLitre() {
+  const { t } = useLanguage()
   const expenses = useLiveQuery(() => db.expenses.toArray()) || []
   const yields = useLiveQuery(() => db.production_yields.toArray()) || []
 
@@ -46,8 +48,8 @@ export function CostPerLitre() {
     return (
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-full">
         <Droplet className="w-8 h-8 text-gray-300 mb-2" />
-        <p className="text-gray-500 font-medium">Cost Per Litre</p>
-        <p className="text-sm text-gray-400 mt-1">No milk production recorded this month.</p>
+        <p className="text-gray-500 font-medium">{t('costPerLitre')}</p>
+        <p className="text-sm text-gray-400 mt-1">{t('noMilkProduction')}</p>
       </div>
     )
   }
@@ -57,7 +59,7 @@ export function CostPerLitre() {
       <div>
         <div className="flex items-center gap-2 mb-2 text-gray-500">
           <Droplet className="w-4 h-4" />
-          <h3 className="font-semibold uppercase tracking-wider text-xs">Cost Per Litre (This Month)</h3>
+          <h3 className="font-semibold uppercase tracking-wider text-xs">{t('costPerLitre')}</h3>
         </div>
         <div className="flex items-baseline gap-2">
             <span className="text-3xl font-black text-gray-900">
@@ -71,15 +73,15 @@ export function CostPerLitre() {
         {stats.diff < 0 ? (
           <span className="flex items-center text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium">
             <TrendingDown className="w-3 h-3 mr-1" />
-            {Math.abs(stats.diff).toFixed(1)}% vs last month
+            {Math.abs(stats.diff).toFixed(1)}% {t('vsLastMonth')}
           </span>
         ) : stats.diff > 0 ? (
           <span className="flex items-center text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full font-medium">
             <TrendingUp className="w-3 h-3 mr-1" />
-            {stats.diff.toFixed(1)}% vs last month
+            {stats.diff.toFixed(1)}% {t('vsLastMonth')}
           </span>
         ) : (
-          <span className="text-gray-500">No change vs last month</span>
+          <span className="text-gray-500">{t('noChange')}</span>
         )}
       </div>
     </div>

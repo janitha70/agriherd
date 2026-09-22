@@ -14,12 +14,14 @@ import Tesseract from 'tesseract.js'
 import { v4 as uuidv4 } from 'uuid'
 import { useRouter } from 'next/navigation'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface ExpenseFormProps {
   initialData?: any
 }
 
 export function ExpenseForm({ initialData }: ExpenseFormProps) {
+  const { t } = useLanguage()
   const router = useRouter()
   const suppliers = useLiveQuery(() => db.suppliers.toArray()) || []
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -37,7 +39,6 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
     supplier_id: initialData?.supplier_id || 'none',
     invoice_number: initialData?.invoice_number || '',
     notes: initialData?.notes || '',
-    season: initialData?.season || 'Maha 2026',
     is_recurring: initialData?.is_recurring || false,
     recurrence_interval: initialData?.recurrence_interval || 'monthly',
     receipt_data: initialData?.receipt_data || ''
@@ -58,7 +59,7 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
     reader.readAsDataURL(file)
 
     setIsOcrProcessing(true)
-    toast.info("Analyzing receipt... (රිසිට්පත විශ්ලේෂණය කරමින්...)")
+    toast.info("Analyzing receipt...")
 
     try {
       const result = await Tesseract.recognize(file, 'eng', {
@@ -124,7 +125,7 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.title || !formData.amount || !formData.category_id) {
-      toast.error("Please fill required fields (කරුණාකර අත්‍යවශ්‍ය තොරතුරු පුරවන්න)")
+      toast.error("Please fill required fields")
       return
     }
 
@@ -144,7 +145,6 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
         supplier_id: formData.supplier_id === 'none' ? undefined : formData.supplier_id,
         invoice_number: formData.invoice_number,
         notes: formData.notes,
-        season: formData.season,
         is_recurring: formData.is_recurring,
         receipt_data: formData.receipt_data,
         syncStatus: 'pending',
@@ -171,7 +171,7 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
             payload: { ...payload, id: initialData.id },
             timestamp: now
           })
-          toast.success("Expense updated offline (වියදම යාවත්කාලීන කරන ලදී)")
+          toast.success("Expense updated offline")
       } else {
           // Add
           payload.createdAt = now
@@ -182,7 +182,7 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
             payload,
             timestamp: now
           })
-          toast.success("Expense saved offline (වියදම සුරකින ලදී)")
+          toast.success("Expense saved offline")
       }
 
       if (navigator.onLine) {
@@ -269,7 +269,7 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Amount (මුදල) * Rs.</Label>
+            <Label>{t('formAmount')}</Label>
             <Input 
               type="number" 
               step="0.01" 
@@ -282,7 +282,7 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
           </div>
           
           <div className="space-y-2">
-            <Label>Expense Title (විස්තරය) *</Label>
+            <Label>{t('formExpenseTitle')}</Label>
             <Input 
               required
               placeholder="e.g. Tomato Seeds 5kg"
@@ -293,7 +293,7 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label>Category (වර්ගය) *</Label>
+          <Label>{t('formCategory')}</Label>
           <ExpenseCategoryPicker 
             value={formData.category_id} 
             onChange={id => setFormData({ ...formData, category_id: id })}
@@ -302,7 +302,7 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label>Date (දිනය)</Label>
+            <Label>{t('formDate')}</Label>
             <Input 
               type="date" 
               required
@@ -312,7 +312,7 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Payment Method (ගෙවූ ආකාරය)</Label>
+            <Label>{t('formPaymentMethod')}</Label>
             <Select 
               value={formData.payment_method} 
               onValueChange={v => setFormData({ ...formData, payment_method: v })}
@@ -321,10 +321,10 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
                 <SelectValue placeholder="Select method" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cash">Cash (මුදල්)</SelectItem>
-                <SelectItem value="bank_transfer">Bank Transfer (බැංකු)</SelectItem>
-                <SelectItem value="card">Card (කාඩ්පත්)</SelectItem>
-                <SelectItem value="credit">Credit (ණයට)</SelectItem>
+                <SelectItem value="cash">{t('payCash')}</SelectItem>
+                <SelectItem value="bank_transfer">{t('payBank')}</SelectItem>
+                <SelectItem value="card">{t('payCard')}</SelectItem>
+                <SelectItem value="credit">{t('payCredit')}</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
@@ -332,7 +332,7 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
 
           {formData.payment_method === 'credit' && (
               <div className="space-y-2">
-                <Label>Payment Status</Label>
+                <Label>{t('formPaymentStatus')}</Label>
                 <Select 
                   value={formData.payment_status} 
                   onValueChange={v => setFormData({ ...formData, payment_status: v })}
@@ -341,7 +341,7 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">Pending (ගෙවිය යුතු)</SelectItem>
+                    <SelectItem value="pending">{t('statusPendingPay')}</SelectItem>
                     <SelectItem value="partially_paid">Partially Paid</SelectItem>
                     <SelectItem value="paid">Fully Paid</SelectItem>
                   </SelectContent>
@@ -371,7 +371,7 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Supplier (සැපයුම්කරු)</Label>
+              <Label>{t('formSupplier')}</Label>
               <Select 
                 value={formData.supplier_id} 
                 onValueChange={v => setFormData({ ...formData, supplier_id: v })}
@@ -389,7 +389,7 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
             </div>
             
             <div className="space-y-2">
-              <Label>Invoice Number (බිල්පත් අංකය)</Label>
+              <Label>{t('formInvoiceNumber')}</Label>
               <Input 
                 placeholder="e.g. INV-1002"
                 value={formData.invoice_number}
@@ -398,32 +398,13 @@ export function ExpenseForm({ initialData }: ExpenseFormProps) {
             </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Season (කන්නය)</Label>
-              <Select 
-                value={formData.season} 
-                onValueChange={v => setFormData({ ...formData, season: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select season" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Maha 2025/26">Maha 2025/26</SelectItem>
-                  <SelectItem value="Yala 2026">Yala 2026</SelectItem>
-                  <SelectItem value="Maha 2026/27">Maha 2026/27</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Notes (සටහන්)</Label>
-              <Input 
-                placeholder="Additional details..."
-                value={formData.notes}
-                onChange={e => setFormData({ ...formData, notes: e.target.value })}
-              />
-            </div>
+        <div className="space-y-2">
+          <Label>{t('formNotes')}</Label>
+          <Input 
+            placeholder="Additional details..."
+            value={formData.notes}
+            onChange={e => setFormData({ ...formData, notes: e.target.value })}
+          />
         </div>
       </div>
 

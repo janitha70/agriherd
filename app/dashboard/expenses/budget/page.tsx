@@ -18,7 +18,6 @@ import { BudgetProgressBar } from '@/components/expenses/BudgetProgressBar'
 export default function BudgetPage() {
   const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
-  const [selectedSeason, setSelectedSeason] = useState('Maha 2026') 
 
   const budgets = useLiveQuery(
       () => db.budgets.where('month').equals(selectedMonth).toArray(),
@@ -55,7 +54,6 @@ export default function BudgetPage() {
       const payload: any = {
         record_id: existing?.record_id || uuidv4(),
         category_id: formData.category_id,
-        season: selectedSeason,
         month: selectedMonth,
         budget_amount: parseFloat(formData.budget_amount),
         syncStatus: 'pending'

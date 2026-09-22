@@ -12,15 +12,16 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface ExpenseListProps {
   expenses: LocalExpense[]
 }
 
 export function ExpenseList({ expenses }: ExpenseListProps) {
+  const { t } = useLanguage()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('all')
-  const [filterSeason, setFilterSeason] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
   const [sortBy, setSortBy] = useState('newest')
   const [expenseToDelete, setExpenseToDelete] = useState<LocalExpense | null>(null)
@@ -58,7 +59,6 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
       if (!e.title.toLowerCase().includes(term) && !e.notes?.toLowerCase().includes(term)) return false
     }
     if (filterCategory !== 'all' && e.category_id !== filterCategory) return false
-    if (filterSeason !== 'all' && e.season !== filterSeason) return false
     if (filterStatus !== 'all') {
        if (filterStatus === 'synced' && e.syncStatus !== 'synced') return false
        if (filterStatus === 'pending' && e.syncStatus !== 'pending') return false
@@ -100,17 +100,6 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
             {ALL_CATEGORIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={filterSeason} onValueChange={(v) => v && setFilterSeason(v)}>
-          <SelectTrigger className="w-full md:w-[150px]">
-            <SelectValue placeholder="Season" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Seasons</SelectItem>
-            <SelectItem value="Maha 2025/26">Maha 2025/26</SelectItem>
-            <SelectItem value="Yala 2026">Yala 2026</SelectItem>
-            <SelectItem value="Maha 2026/27">Maha 2026/27</SelectItem>
-          </SelectContent>
-        </Select>
         <Select value={sortBy} onValueChange={(v) => v && setSortBy(v)}>
           <SelectTrigger className="w-full md:w-[150px]">
             <SelectValue placeholder="Sort by" />
@@ -130,12 +119,12 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
               <tr>
-                <th className="px-6 py-4 font-medium">Date (දිනය)</th>
-                <th className="px-6 py-4 font-medium">Category (වර්ගය)</th>
-                <th className="px-6 py-4 font-medium">Description (විස්තරය)</th>
-                <th className="px-6 py-4 font-medium">Status & Method</th>
-                <th className="px-6 py-4 font-medium text-right">Amount (මුදල)</th>
-                <th className="px-6 py-4 font-medium text-right">Actions</th>
+                <th className="px-6 py-4 font-medium">{t('tableDate')}</th>
+                <th className="px-6 py-4 font-medium">{t('tableCategory')}</th>
+                <th className="px-6 py-4 font-medium">{t('tableDescription')}</th>
+                <th className="px-6 py-4 font-medium">{t('tableStatus')}</th>
+                <th className="px-6 py-4 font-medium text-right">{t('tableAmount')}</th>
+                <th className="px-6 py-4 font-medium text-right">{t('tableActions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">

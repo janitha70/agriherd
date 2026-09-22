@@ -5,6 +5,7 @@ import "./globals.css";
 // 1. Import the SyncProvider we just created
 import SyncProvider from "@/components/SyncProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -33,11 +34,13 @@ export default function RootLayout({
     <html lang="en" className={`${archivo.variable} ${yaldevi.variable} h-full antialiased`}>
       <body className={`min-h-full flex flex-col font-sans`}>
         {/* 2. Wrap your app children in the provider */}
-        <LanguageProvider>
-          <SyncProvider>
-            {children}
-          </SyncProvider>
-        </LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            <SyncProvider>
+              {children}
+            </SyncProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -12,11 +12,51 @@ import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
 import { useRouter } from 'next/navigation'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { format } from 'date-fns'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { LocalFarmIncome } from '@/lib/types/expenses'
 
+const INCOME_SOURCES = {
+  Cattle: [
+    'Milk Sales',
+    'Calf Sales',
+    'Cattle Sales',
+    'Milk Product Sales',
+    'Breeding Services',
+    'Manure Sales',
+    'Government Subsidy / Grant',
+    'Other'
+  ],
+  Chicken: [
+    'Egg Sales',
+    'Chicken Meat Sales',
+    'Live Chicken Sales',
+    'Chick Sales',
+    'Breeding Bird Sales',
+    'Poultry Manure Sales',
+    'Government Subsidy / Grant',
+    'Other'
+  ],
+  Pig: [
+    'Live Pig Sales',
+    'Pork Sales',
+    'Piglet Sales',
+    'Breeding Services',
+    'Pig Manure Sales',
+    'Government Subsidy / Grant',
+    'Other'
+  ]
+}
+
+const getLivestockTypeForSource = (source: string) => {
+  if (INCOME_SOURCES.Chicken.includes(source)) return 'Chicken'
+  if (INCOME_SOURCES.Pig.includes(source)) return 'Pig'
+  return 'Cattle'
+}
+
 export default function IncomePage() {
+  const { t } = useLanguage()
   const router = useRouter()
   const incomes = useLiveQuery(() => db.farmIncome.toArray()) || []
   
@@ -26,31 +66,31 @@ export default function IncomePage() {
   const [incomeToDelete, setIncomeToDelete] = useState<LocalFarmIncome | null>(null)
   
   const [formData, setFormData] = useState({
+    livestockType: 'Cattle',
     source: 'Milk Sales',
     amount: '',
     income_date: new Date().toISOString().split('T')[0],
-    notes: '',
-    season: 'Maha 2026'
+    notes: ''
   })
 
   const handleOpenForm = (income?: LocalFarmIncome) => {
       if (income) {
           setEditingIncome(income)
           setFormData({
+              livestockType: getLivestockTypeForSource(income.source),
               source: income.source,
               amount: income.amount.toString(),
               income_date: income.income_date,
-              notes: income.notes || '',
-              season: income.season || 'Maha 2026'
+              notes: income.notes || ''
           })
       } else {
           setEditingIncome(null)
           setFormData({
+              livestockType: 'Cattle',
               source: 'Milk Sales',
               amount: '',
               income_date: new Date().toISOString().split('T')[0],
-              notes: '',
-              season: 'Maha 2026'
+              notes: ''
           })
       }
       setIsFormOpen(true)
@@ -59,7 +99,7 @@ export default function IncomePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.amount || !formData.source) {
-      toast.error("Please fill required fields (කරුණාකර අත්‍යවශ්‍ය තොරතුරු පුරවන්න)")
+      toast.error("Please fill required fields")
       return
     }
 
@@ -73,7 +113,6 @@ export default function IncomePage() {
         amount: parseFloat(formData.amount),
         income_date: formData.income_date,
         notes: formData.notes,
-        season: formData.season,
         syncStatus: 'pending',
       }
 
@@ -86,7 +125,7 @@ export default function IncomePage() {
             payload: { ...payload, id: editingIncome.id },
             timestamp: now
           })
-          toast.success("Income updated offline (ආදායම යාවත්කාලීන කරන ලදී)")
+          toast.success("Income updated offline")
       } else {
           payload.createdAt = now
           await db.farmIncome.add(payload)
@@ -96,7 +135,7 @@ export default function IncomePage() {
             payload,
             timestamp: now
           })
-          toast.success("Income saved offline (ආදායම සුරකින ලදී)")
+          toast.success("Income saved offline")
       }
 
       setIsFormOpen(false)
@@ -160,11 +199,11 @@ export default function IncomePage() {
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
               <tr>
-                <th className="px-6 py-4 font-medium">Date (දිනය)</th>
-                <th className="px-6 py-4 font-medium">Source (මාර්ගය)</th>
-                <th className="px-6 py-4 font-medium">Notes (සටහන්)</th>
-                <th className="px-6 py-4 font-medium text-right">Amount (මුදල)</th>
-                <th className="px-6 py-4 font-medium text-right">Actions</th>
+                <th className="px-6 py-4 font-medium">{t('tableDate')}</th>
+                <th className="px-6 py-4 font-medium">{t('tableSource')}</th>
+                <th className="px-6 py-4 font-medium">{t('tableNotes')}</th>
+                <th className="px-6 py-4 font-medium text-right">{t('tableAmount')}</th>
+                <th className="px-6 py-4 font-medium text-right">{t('tableActions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -219,7 +258,7 @@ export default function IncomePage() {
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4 pt-4">
                   <div className="space-y-2">
-                      <Label>Amount (මුදල) * Rs.</Label>
+                      <Label>{t('formAmount')}</Label>
                       <Input 
                         type="number" 
                         step="0.01" 
@@ -231,57 +270,58 @@ export default function IncomePage() {
                       />
                   </div>
                   
-                  <div className="space-y-2">
-                      <Label>Income Source (ආදායම් මාර්ගය) *</Label>
-                      <Select 
-                        value={formData.source} 
-                        onValueChange={(v) => v && setFormData({ ...formData, source: v })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select source" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Milk Sales">Milk Sales (කිරි)</SelectItem>
-                          <SelectItem value="Crop Sales">Crop Sales (බෝග)</SelectItem>
-                          <SelectItem value="Livestock Sale">Livestock Sale (සතුන් විකිණීම)</SelectItem>
-                          <SelectItem value="Manure/Fertilizer">Manure/Fertilizer (පොහොර අලෙවිය)</SelectItem>
-                          <SelectItem value="Calf Sales">Calf Sales (පැටවුන් විකිණීම)</SelectItem>
-                          <SelectItem value="Subsidy">Gov Subsidy / Grant (සහනාධාර)</SelectItem>
-                          <SelectItem value="Other">Other (වෙනත්)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                  </div>
-
                   <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                          <Label>Date (දිනය)</Label>
-                          <Input 
-                            type="date" 
-                            required
-                            value={formData.income_date}
-                            onChange={e => setFormData({ ...formData, income_date: e.target.value })}
-                          />
-                      </div>
-                      <div className="space-y-2">
-                          <Label>Season (කන්නය)</Label>
+                          <Label>Livestock Type</Label>
                           <Select 
-                            value={formData.season} 
-                            onValueChange={(v) => v && setFormData({ ...formData, season: v })}
+                            value={formData.livestockType} 
+                            onValueChange={(v) => v && setFormData({ 
+                                ...formData, 
+                                livestockType: v, 
+                                source: INCOME_SOURCES[v as keyof typeof INCOME_SOURCES][0] 
+                            })}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select season" />
+                              <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Maha 2025/26">Maha 2025/26</SelectItem>
-                              <SelectItem value="Yala 2026">Yala 2026</SelectItem>
-                              <SelectItem value="Maha 2026/27">Maha 2026/27</SelectItem>
+                              <SelectItem value="Cattle">{t('livestockCattle')}</SelectItem>
+                              <SelectItem value="Chicken">{t('livestockChicken')}</SelectItem>
+                              <SelectItem value="Pig">{t('livestockPig')}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                          <Label>{t('formIncomeSource')}</Label>
+                          <Select 
+                            value={formData.source} 
+                            onValueChange={(v) => v && setFormData({ ...formData, source: v })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select source" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {INCOME_SOURCES[formData.livestockType as keyof typeof INCOME_SOURCES].map((src) => (
+                                  <SelectItem key={src} value={src}>{src}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                       </div>
                   </div>
 
                   <div className="space-y-2">
-                      <Label>Notes (සටහන්)</Label>
+                      <Label>{t('formDate')}</Label>
+                      <Input 
+                        type="date" 
+                        required
+                        value={formData.income_date}
+                        onChange={e => setFormData({ ...formData, income_date: e.target.value })}
+                      />
+                  </div>
+
+                  <div className="space-y-2">
+                      <Label>{t('formNotes')}</Label>
                       <Input 
                         placeholder="Additional details..."
                         value={formData.notes}

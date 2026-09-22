@@ -3,6 +3,7 @@
 import React from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { ExpenseSummaryCard } from '@/components/expenses/ExpenseSummaryCard'
 import { ExpenseList } from '@/components/expenses/ExpenseList'
 import { ProfitLossChart } from '@/components/expenses/ProfitLossChart'
@@ -15,6 +16,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
 export default function ExpensesDashboardPage() {
+  const { t } = useLanguage()
   const expenses = useLiveQuery(() => db.expenses.orderBy('expense_date').reverse().toArray()) || []
   const income = useLiveQuery(() => db.farmIncome.orderBy('income_date').reverse().toArray()) || []
 
@@ -26,20 +28,20 @@ export default function ExpensesDashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Expenses & Income</h1>
-          <p className="text-gray-500">වියදම් සහ ආදායම් කළමනාකරණය</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('expensesTitle')}</h1>
+          <p className="text-gray-500">{t('expensesSubtitle')}</p>
         </div>
         <div className="flex gap-2">
           <Link href="/dashboard/expenses/income">
             <Button variant="outline" className="bg-white border-paddy text-paddy hover:bg-paddy/10">
               <TrendingUp className="w-4 h-4 mr-2" />
-              Add Income (ආදායම)
+              {t('addIncome')}
             </Button>
           </Link>
           <Link href="/dashboard/expenses/new">
             <Button className="bg-turmeric hover:bg-turmeric/90 text-ink font-medium">
               <PlusCircle className="w-4 h-4 mr-2" />
-              Add Expense (වියදම)
+              {t('addExpense')}
             </Button>
           </Link>
         </div>
@@ -47,54 +49,60 @@ export default function ExpensesDashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ExpenseSummaryCard 
-          title="Total Expenses"
-          title_si="මුළු වියදම"
+          title={t('totalExpenses')}
+          title_si=""
           amount={totalExpenses}
           type="expense"
           icon={Wallet}
         />
         <ExpenseSummaryCard 
-          title="Total Income"
-          title_si="මුළු ආදායම"
+          title={t('totalIncome')}
+          title_si=""
           amount={totalIncome}
           type="income"
           icon={TrendingUp}
         />
         <ExpenseSummaryCard 
-          title="Net Balance"
-          title_si="ශේෂය"
+          title={t('netBalance')}
+          title_si=""
           amount={balance}
           type="balance"
           icon={HandCoins}
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
           <ProfitLossChart expenses={expenses} income={income} />
           
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Recent Expenses (මෑත කාලීන වියදම්)</h2>
-            <ExpenseList expenses={expenses.slice(0, 10)} />
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">{t('recentExpenses')}</h2>
+              <Link href="/dashboard/expenses/reports" className="text-xs text-paddy font-medium hover:underline">
+                {t('viewAll')}
+              </Link>
+            </div>
+            <div className="max-h-64 overflow-y-auto">
+              <ExpenseList expenses={expenses.slice(0, 5)} />
+            </div>
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 lg:sticky lg:top-6 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
           <FinancialAlerts />
           <FinancialForecast />
           <CostPerLitre />
           <AnimalFinancials />
           
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Quick Links</h2>
-            <div className="space-y-3">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <h2 className="text-base font-semibold text-gray-800 mb-3">{t('quickLinks')}</h2>
+            <div className="space-y-2">
               <Link href="/dashboard/expenses/reports" className="flex items-center p-3 rounded-xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50 transition-colors">
                 <div className="bg-gray-100 p-2 rounded-lg mr-3 text-gray-600">
                   <TrendingUp className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">Financial Reports</h3>
-                  <p className="text-xs text-gray-500">මූල්‍ය වාර්තා</p>
+                  <h3 className="text-sm font-medium text-gray-900">{t('financialReports')}</h3>
                 </div>
               </Link>
               
@@ -103,8 +111,7 @@ export default function ExpensesDashboardPage() {
                   <Wallet className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">Budget Tracker</h3>
-                  <p className="text-xs text-gray-500">අයවැය කළමනාකරණය</p>
+                  <h3 className="text-sm font-medium text-gray-900">{t('budgetTracker')}</h3>
                 </div>
               </Link>
               
@@ -113,17 +120,16 @@ export default function ExpensesDashboardPage() {
                   <HandCoins className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">Suppliers & Vendors</h3>
-                  <p className="text-xs text-gray-500">සැපයුම්කරුවන්</p>
+                  <h3 className="text-sm font-medium text-gray-900">{t('suppliersVendors')}</h3>
                 </div>
               </Link>
+
               <Link href="/dashboard/expenses/recurring" className="flex items-center p-3 rounded-xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50 transition-colors">
                 <div className="bg-gray-100 p-2 rounded-lg mr-3 text-gray-600">
                   <RefreshCcw className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">Recurring Expenses</h3>
-                  <p className="text-xs text-gray-500">පුනරාවර්තන වියදම්</p>
+                  <h3 className="text-sm font-medium text-gray-900">{t('recurringExpenses')}</h3>
                 </div>
               </Link>
             </div>

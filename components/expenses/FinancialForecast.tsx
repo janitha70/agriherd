@@ -4,8 +4,10 @@ import React, { useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
 import { TrendingUp, Calculator } from 'lucide-react'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export function FinancialForecast() {
+  const { t } = useLanguage()
   const expenses = useLiveQuery(() => db.expenses.toArray()) || []
   const incomes = useLiveQuery(() => db.farmIncome.toArray()) || []
 
@@ -45,23 +47,23 @@ export function FinancialForecast() {
     <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 p-6 rounded-2xl shadow-sm text-white h-full flex flex-col justify-center">
       <div className="flex items-center gap-2 mb-6">
         <Calculator className="w-5 h-5 text-emerald-100" />
-        <h3 className="font-bold">Next Month Forecast</h3>
+        <h3 className="font-bold">{t('nextMonthForecast')}</h3>
       </div>
       
       {!forecast.hasData ? (
-          <p className="text-emerald-100 text-sm">Not enough historical data to generate a forecast.</p>
+          <p className="text-emerald-100 text-sm">{t('noForecastData')}</p>
       ) : (
           <div className="space-y-4 flex-1 flex flex-col justify-between">
               <div>
-                  <p className="text-emerald-200 text-sm">Projected Income</p>
+                  <p className="text-emerald-200 text-sm">{t('projectedIncome')}</p>
                   <p className="text-2xl font-bold">Rs. {forecast.predictedInc.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
               </div>
               <div>
-                  <p className="text-emerald-200 text-sm">Projected Expenses</p>
+                  <p className="text-emerald-200 text-sm">{t('projectedExpenses')}</p>
                   <p className="text-xl font-medium text-emerald-100">Rs. {forecast.predictedExp.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
               </div>
               <div className="pt-4 border-t border-emerald-500/50">
-                  <p className="text-emerald-200 text-sm">Estimated Profit</p>
+                  <p className="text-emerald-200 text-sm">{t('estimatedProfit')}</p>
                   <p className="text-2xl font-black">Rs. {forecast.predictedProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
               </div>
           </div>
