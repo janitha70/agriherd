@@ -1,14 +1,18 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Activity, Droplets, Zap, AlertCircle, Loader2, Beef, Bird, PiggyBank, CloudOff, Cloud } from "lucide-react"
+import { Activity, Droplets, Zap, AlertCircle, Loader2, Beef, Bird, PiggyBank, CloudOff, Cloud, Wheat } from "lucide-react"
 import { useLiveQuery } from "dexie-react-hooks"
 import { db } from "@/lib/db"
 import { useLanguage } from "@/contexts/LanguageContext"
 import { SyncStatus } from "@/components/agriherd/SyncStatus"
 import { LedgerRow } from "@/components/agriherd/LedgerRow"
-import { AlertFlag } from "@/components/agriherd/AlertFlag"
 import { TagBadge } from "@/components/agriherd/TagBadge"
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Card, CardContent } from '@/components/ui/card'
+import { YieldTrendsChart } from "@/components/analytics/YieldTrendsChart"
+import { ProfitabilityChart } from "@/components/analytics/ProfitabilityChart"
+import { CostPerLitreChart } from "@/components/analytics/CostPerLitreChart"
 
 // Animated counter hook
 function useCountUp(target: number, duration = 800) {
@@ -95,10 +99,21 @@ export default function DashboardOverview() {
     }
 
     const today = new Date().toISOString().split("T")[0]
-    const totalDailyYield = healthMetrics?.reduce((sum, metric) => {
-        const metricDate = new Date(metric.recordedAt).toISOString().split("T")[0]
-        return metricDate === today ? sum + (metric.yieldAmount || 0) : sum
-    }, 0) || 0
+    let totalDailyYield = 0
+    let totalYield7Days = 0
+    let totalFeedConsumed = 0
+    
+    if (healthMetrics) {
+        healthMetrics.forEach(metric => {
+            const metricDateStr = new Date(metric.recordedAt).toISOString().split("T")[0]
+            if (metricDateStr === today) {
+                totalDailyYield += (metric.yieldAmount || 0)
+            }
+            // Matching analytics page behavior
+            totalYield7Days += (metric.yieldAmount || 0)
+            totalFeedConsumed += (metric.feedIntake || 0)
+        })
+    }
 
     const animatedTotal   = useCountUp(totalAnimalCount)
     const animatedYield   = useCountUp(Math.round(totalDailyYield * 10))
@@ -154,34 +169,59 @@ export default function DashboardOverview() {
                     <p className="text-muted-foreground text-sm mt-0.5">{now}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    {/* Online/Offline badge */}
-                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                        isOnline
-                            ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
-                            : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
-                    }`}>
-                        {isOnline
-                            ? <><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /><Cloud className="w-3 h-3" /> Online</>
-                            : <><span className="w-1.5 h-1.5 rounded-full bg-red-500" /><CloudOff className="w-3 h-3" /> Offline</>
-                        }
-                    </div>
-                    <SyncStatus state={isOnline && pendingCount === 0 ? "synced" : "queued"} />
+                    <SyncStatus state={!isOnline ? "offline" : (pendingCount && pendingCount > 0) ? "queued" : "synced"} />
                 </div>
             </div>
 
             {/* ── Active Alerts ── */}
             {alerts.length > 0 && (
-                <div className="space-y-2 animate-fade-slide-up delay-100">
-                    {alerts.map(alert => (
-                        <AlertFlag
-                            key={alert.id}
-                            title={alert.title}
-                            detail={alert.detail}
-                            tagId={alert.tagId}
-                        />
-                    ))}
-                </div>
+                <section className="space-y-3 animate-fade-slide-up delay-100">
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("activeAlerts") || "Active Alerts"}</h2>
+                    <div className="space-y-3">
+                        {alerts.map(alert => (
+                            <Alert key={alert.id} variant="destructive" className="bg-red-50 border-red-200 dark:bg-red-950/40 dark:border-red-900/50">
+                                <Zap className="h-5 w-5 dark:text-red-400" />
+                                <AlertTitle className="font-bold text-red-900 dark:text-red-400">
+                                    Tag: {alert.tagId}
+                                </AlertTitle>
+                                <AlertDescription className="mt-1 flex flex-col gap-1 text-red-700 dark:text-red-300">
+                                    <span className="text-sm font-medium">{alert.title}</span>
+                                    <span className="text-xs opacity-80">{alert.detail}</span>
+                                </AlertDescription>
+                            </Alert>
+                        ))}
+                    </div>
+                </section>
             )}
+
+            {/* ── Weekly Performance ── */}
+            <section className="space-y-3 animate-fade-slide-up delay-[150ms]">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("weeklyPerformance") || "Weekly Performance"}</h2>
+                
+                <Card className="shadow-sm border-border">
+                    <CardContent className="p-5 flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-muted-foreground mb-1">{t("totalYield7Days") || "Total Yield (7 Days)"}</p>
+                            <p className="text-3xl font-bold">{totalYield7Days.toFixed(1)} <span className="text-lg font-normal text-muted-foreground">L</span></p>
+                        </div>
+                        <div className="bg-blue-50 p-3 rounded-full dark:bg-blue-900/30">
+                            <Droplets className="w-7 h-7 text-blue-500 dark:text-blue-400" />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="shadow-sm border-border">
+                    <CardContent className="p-5 flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-muted-foreground mb-1">{t("totalFeedConsumed") || "Total Feed Consumed"}</p>
+                            <p className="text-3xl font-bold">{totalFeedConsumed.toFixed(1)} <span className="text-lg font-normal text-muted-foreground">kg</span></p>
+                        </div>
+                        <div className="bg-paddy/10 p-3 rounded-full dark:bg-emerald-900/30">
+                            <Wheat className="w-7 h-7 text-paddy dark:text-emerald-400" />
+                        </div>
+                    </CardContent>
+                </Card>
+            </section>
 
             {/* ── Hero Stats Row ── */}
             <div className="animate-fade-slide-up delay-200 grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -268,8 +308,19 @@ export default function DashboardOverview() {
                 </div>
             </div>
 
+            {/* ── Advanced Insights (Charts) ── */}
+            <div className="animate-fade-slide-up delay-[400ms] space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="lg:col-span-2">
+                        <YieldTrendsChart />
+                    </div>
+                    <ProfitabilityChart />
+                    <CostPerLitreChart />
+                </div>
+            </div>
+
             {/* ── Species Breakdown ── */}
-            <div className="animate-fade-slide-up delay-400">
+            <div className="animate-fade-slide-up delay-[500ms]">
                 <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3">
                     Species Breakdown
                 </h2>

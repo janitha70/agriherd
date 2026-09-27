@@ -79,13 +79,13 @@ export default function RecordsPage() {
     return (
         <div className="max-w-6xl mx-auto space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900">{t("newLogEntry")}</h1>
-                <p className="text-gray-500 mt-1">{t("logVitalsDesc")}</p>
+                <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-emerald-300">{t("newLogEntry")}</h1>
+                <p className="text-gray-500 dark:text-muted-foreground mt-1">{t("logVitalsDesc")}</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <form onSubmit={handleSubmit} className="lg:col-span-2">
-                    <Card className="shadow-sm border-gray-200">
+                    <Card className="shadow-sm border-border">
                         <CardContent className="space-y-6 pt-6">
                             <div className="space-y-2">
                                 <Label htmlFor="entityId">{t("entityIdLabel")}</Label>
@@ -132,7 +132,7 @@ export default function RecordsPage() {
                                 />
                             </div>
                         </CardContent>
-                        <CardFooter className="bg-gray-50 border-t rounded-b-xl py-4">
+                        <CardFooter className="bg-gray-50 dark:bg-emerald-950/10 border-t dark:border-border rounded-b-xl py-4">
                             <Button type="submit" disabled={isSubmitting || animals.length === 0} className="w-full bg-emerald-900 hover:bg-emerald-800 text-white font-bold">
                                 {isSubmitting ? t("logging") : t("submitLog")}
                             </Button>
@@ -141,38 +141,38 @@ export default function RecordsPage() {
                 </form>
 
                 {/* DYNAMIC SIDEBAR */}
-                <Card className="shadow-sm h-fit border-gray-200">
-                    <CardHeader className="border-b pb-4 bg-gray-50/50 rounded-t-xl">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <Clock className="h-5 w-5 text-gray-500" />
+                <Card className="shadow-sm h-fit border-border">
+                    <CardHeader className="border-b dark:border-border pb-4 bg-gray-50/50 dark:bg-emerald-950/10 rounded-t-xl">
+                        <CardTitle className="text-lg flex items-center gap-2 dark:text-emerald-100">
+                            <Clock className="h-5 w-5 text-gray-500 dark:text-emerald-400" />
                             {t("recentEntries")}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
-                        <div className="divide-y">
+                        <div className="divide-y dark:divide-border">
                             {recentLogs.length === 0 ? (
-                                <p className="p-6 text-sm text-center text-gray-500">{t("noVitals")}</p>
+                                <p className="p-6 text-sm text-center text-gray-500 dark:text-muted-foreground">{t("noVitals")}</p>
                             ) : (
                                 recentLogs.map((log) => {
                                     const isAlert = log.temperature > 39.5 || log.yieldAmount < 5;
                                     return (
-                                        <div key={log.id} className={`p-4 ${isAlert ? 'bg-red-50/50' : 'bg-white'}`}>
+                                        <div key={log.id} className={`p-4 ${isAlert ? 'bg-red-50/50 dark:bg-red-950/20' : 'bg-white dark:bg-transparent'}`}>
                                             <div className="flex justify-between items-start mb-1">
-                                                <span className={`font-bold ${isAlert ? 'text-red-900' : 'text-gray-900'}`}>
+                                                <span className={`font-bold ${isAlert ? 'text-red-900 dark:text-red-400' : 'text-gray-900 dark:text-emerald-100'}`}>
                                                     {log.animalTagId}
                                                 </span>
-                                                <span className="text-xs text-gray-400">
+                                                <span className="text-xs text-gray-400 dark:text-muted-foreground">
                                                     {new Date(log.recordedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             </div>
                                             {isAlert ? (
-                                                <div className="text-sm text-red-700 flex items-center gap-1">
-                                                    <Zap className="h-3 w-3 fill-red-600" />
+                                                <div className="text-sm text-red-700 dark:text-red-300 flex items-center gap-1">
+                                                    <Zap className="h-3 w-3 fill-red-600 dark:fill-red-400 text-red-600 dark:text-red-400" />
                                                     Flagged: {log.temperature > 39.5 ? `High Temp (${log.temperature}°C)` : 'Low Yield'}
                                                 </div>
                                             ) : (
-                                                <div className="text-sm text-gray-600 flex items-center gap-1">
-                                                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                                <div className="text-sm text-gray-600 dark:text-muted-foreground flex items-center gap-1">
+                                                    <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                                                     Yield: {log.yieldAmount} | Temp: {log.temperature}°C
                                                 </div>
                                             )}

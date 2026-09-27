@@ -46,42 +46,42 @@ export function CostPerLitre() {
 
   if (stats.totalYield === 0) {
     return (
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-full">
-        <Droplet className="w-8 h-8 text-gray-300 mb-2" />
-        <p className="text-gray-500 font-medium">{t('costPerLitre')}</p>
-        <p className="text-sm text-gray-400 mt-1">{t('noMilkProduction')}</p>
+      <div className="bg-white dark:bg-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-border flex flex-col items-center justify-center text-center h-full">
+        <Droplet className="w-8 h-8 text-gray-300 dark:text-muted-foreground/50 mb-2" />
+        <p className="text-gray-500 dark:text-muted-foreground font-medium">{t('costPerLitre')}</p>
+        <p className="text-sm text-gray-400 dark:text-muted-foreground/70 mt-1">{t('noMilkProduction')}</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-full">
+    <div className="bg-white dark:bg-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-border flex flex-col justify-between h-full">
       <div>
-        <div className="flex items-center gap-2 mb-2 text-gray-500">
+        <div className="flex items-center gap-2 mb-2 text-gray-500 dark:text-muted-foreground">
           <Droplet className="w-4 h-4" />
           <h3 className="font-semibold uppercase tracking-wider text-xs">{t('costPerLitre')}</h3>
         </div>
         <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-gray-900">
+            <span className="text-3xl font-black text-gray-900 dark:text-emerald-100">
                 Rs. {stats.currentCPL.toLocaleString(undefined, { maximumFractionDigits: 2 })}
             </span>
-            <span className="text-gray-500 text-sm font-medium">/ L</span>
+            <span className="text-gray-500 dark:text-muted-foreground text-sm font-medium">/ L</span>
         </div>
       </div>
       
       <div className="mt-4 flex items-center gap-2 text-sm">
         {stats.diff < 0 ? (
-          <span className="flex items-center text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium">
+          <span className="flex items-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded-full font-medium">
             <TrendingDown className="w-3 h-3 mr-1" />
             {Math.abs(stats.diff).toFixed(1)}% {t('vsLastMonth')}
           </span>
         ) : stats.diff > 0 ? (
-          <span className="flex items-center text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full font-medium">
+          <span className="flex items-center text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 px-2 py-0.5 rounded-full font-medium">
             <TrendingUp className="w-3 h-3 mr-1" />
             {stats.diff.toFixed(1)}% {t('vsLastMonth')}
           </span>
         ) : (
-          <span className="text-gray-500">{t('noChange')}</span>
+          <span className="text-gray-500 dark:text-muted-foreground">{t('noChange')}</span>
         )}
       </div>
     </div>

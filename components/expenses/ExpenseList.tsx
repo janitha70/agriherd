@@ -114,10 +114,10 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-card rounded-2xl shadow-sm border border-gray-100 dark:border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+            <thead className="bg-gray-50 dark:bg-emerald-950/20 text-gray-500 dark:text-muted-foreground text-xs uppercase">
               <tr>
                 <th className="px-6 py-4 font-medium">{t('tableDate')}</th>
                 <th className="px-6 py-4 font-medium">{t('tableCategory')}</th>
@@ -127,10 +127,10 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
                 <th className="px-6 py-4 font-medium text-right">{t('tableActions')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-border">
               {filtered.length === 0 ? (
                   <tr>
-                      <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
+                      <td colSpan={6} className="px-6 py-10 text-center text-gray-500 dark:text-muted-foreground">
                           No expenses match your filters.
                       </td>
                   </tr>
@@ -139,8 +139,8 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
                 const Icon = category ? IconMap[category.icon] || CircleDot : CircleDot
                 
                 return (
-                  <tr key={expense.id || expense.record_id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                  <tr key={expense.id || expense.record_id} className="hover:bg-gray-50/50 dark:hover:bg-emerald-950/20 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-emerald-100">
                       <div className="flex items-center gap-2">
                         <SyncIcon status={expense.syncStatus} />
                         {format(new Date(expense.expense_date), 'MMM dd, yyyy')}
@@ -155,18 +155,18 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
                           <Icon className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{category?.name || 'Unknown'}</p>
-                          <p className="text-[10px] text-gray-500">{category?.name_si}</p>
+                          <p className="font-medium text-gray-900 dark:text-emerald-100">{category?.name || 'Unknown'}</p>
+                          <p className="text-[10px] text-gray-500 dark:text-muted-foreground">{category?.name_si}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-700 max-w-[200px] truncate">
+                    <td className="px-6 py-4 text-gray-700 dark:text-emerald-100 max-w-[200px] truncate">
                       {expense.title}
-                      {expense.notes && <p className="text-xs text-gray-400 truncate mt-0.5">{expense.notes}</p>}
+                      {expense.notes && <p className="text-xs text-gray-400 dark:text-muted-foreground truncate mt-0.5">{expense.notes}</p>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col gap-1 items-start">
-                          <span className="px-2.5 py-1 text-[10px] font-medium rounded-full bg-gray-100 text-gray-600 uppercase tracking-wide">
+                          <span className="px-2.5 py-1 text-[10px] font-medium rounded-full bg-gray-100 dark:bg-emerald-950/40 text-gray-600 dark:text-emerald-300 uppercase tracking-wide">
                             {expense.payment_method.replace('_', ' ')}
                           </span>
                           {expense.payment_method === 'credit' && (
@@ -180,11 +180,11 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <p className="font-semibold text-rose-600">
+                      <p className="font-semibold text-rose-600 dark:text-rose-400">
                           Rs. {expense.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </p>
                       {expense.payment_method === 'credit' && expense.payment_status === 'partially_paid' && (
-                          <p className="text-[10px] text-gray-500 mt-1">
+                          <p className="text-[10px] text-gray-500 dark:text-muted-foreground mt-1">
                               Paid: Rs. {expense.paid_amount?.toLocaleString() || 0}
                           </p>
                       )}
@@ -192,12 +192,12 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-1">
                             <Link href={`/dashboard/expenses/${expense.id}`}>
-                                <Button variant="ghost" size="icon-sm" className="text-ink/60 hover:text-paddy hover:bg-paddy/10">
+                                <Button variant="ghost" size="icon-sm" className="text-ink/60 hover:text-paddy hover:bg-paddy/10 dark:text-emerald-400 dark:hover:bg-emerald-950/40">
                                     <Eye className="w-4 h-4" />
                                 </Button>
                             </Link>
                             <Link href={`/dashboard/expenses/${expense.id}/edit`}>
-                                <Button variant="ghost" size="icon-sm" className="text-ink/60 hover:text-paddy hover:bg-paddy/10">
+                                <Button variant="ghost" size="icon-sm" className="text-ink/60 hover:text-paddy hover:bg-paddy/10 dark:text-emerald-400 dark:hover:bg-emerald-950/40">
                                     <Edit className="w-4 h-4" />
                                 </Button>
                             </Link>
@@ -205,7 +205,7 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
                               variant="ghost" 
                               size="icon-sm" 
                               onClick={() => setExpenseToDelete(expense)}
-                              className="text-gray-500 hover:text-rose-600 hover:bg-rose-50"
+                              className="text-gray-500 hover:text-rose-600 hover:bg-rose-50 dark:text-muted-foreground dark:hover:text-rose-400 dark:hover:bg-rose-950/20"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </Button>

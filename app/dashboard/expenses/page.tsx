@@ -28,12 +28,12 @@ export default function ExpensesDashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('expensesTitle')}</h1>
-          <p className="text-gray-500">{t('expensesSubtitle')}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-emerald-300">{t('expensesTitle')}</h1>
+          <p className="text-gray-500 dark:text-muted-foreground">{t('expensesSubtitle')}</p>
         </div>
         <div className="flex gap-2">
           <Link href="/dashboard/expenses/income">
-            <Button variant="outline" className="bg-white border-paddy text-paddy hover:bg-paddy/10">
+            <Button variant="outline" className="bg-white dark:bg-transparent border-paddy dark:border-emerald-400 text-paddy dark:text-emerald-400 hover:bg-paddy/10 dark:hover:bg-emerald-950/40">
               <TrendingUp className="w-4 h-4 mr-2" />
               {t('addIncome')}
             </Button>
@@ -75,9 +75,9 @@ export default function ExpensesDashboardPage() {
         <div className="lg:col-span-2 space-y-6">
           <ProfitLossChart expenses={expenses} income={income} />
           
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white dark:bg-card rounded-2xl shadow-sm border border-gray-100 dark:border-border p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">{t('recentExpenses')}</h2>
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-emerald-100">{t('recentExpenses')}</h2>
               <Link href="/dashboard/expenses/reports" className="text-xs text-paddy font-medium hover:underline">
                 {t('viewAll')}
               </Link>
@@ -94,42 +94,42 @@ export default function ExpensesDashboardPage() {
           <CostPerLitre />
           <AnimalFinancials />
           
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-            <h2 className="text-base font-semibold text-gray-800 mb-3">{t('quickLinks')}</h2>
+          <div className="bg-white dark:bg-card rounded-2xl shadow-sm border border-gray-100 dark:border-border p-5">
+            <h2 className="text-base font-semibold text-gray-800 dark:text-emerald-100 mb-3">{t('quickLinks')}</h2>
             <div className="space-y-2">
-              <Link href="/dashboard/expenses/reports" className="flex items-center p-3 rounded-xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50 transition-colors">
-                <div className="bg-gray-100 p-2 rounded-lg mr-3 text-gray-600">
+              <Link href="/dashboard/expenses/reports" className="flex items-center p-3 rounded-xl border border-gray-100 dark:border-border hover:border-emerald-200 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors">
+                <div className="bg-gray-100 dark:bg-emerald-950/40 p-2 rounded-lg mr-3 text-gray-600 dark:text-emerald-400">
                   <TrendingUp className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">{t('financialReports')}</h3>
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-emerald-100">{t('financialReports')}</h3>
                 </div>
               </Link>
               
-              <Link href="/dashboard/expenses/budget" className="flex items-center p-3 rounded-xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50 transition-colors">
-                <div className="bg-gray-100 p-2 rounded-lg mr-3 text-gray-600">
+              <Link href="/dashboard/expenses/budget" className="flex items-center p-3 rounded-xl border border-gray-100 dark:border-border hover:border-emerald-200 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors">
+                <div className="bg-gray-100 dark:bg-emerald-950/40 p-2 rounded-lg mr-3 text-gray-600 dark:text-emerald-400">
                   <Wallet className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">{t('budgetTracker')}</h3>
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-emerald-100">{t('budgetTracker')}</h3>
                 </div>
               </Link>
               
-              <Link href="/dashboard/expenses/suppliers" className="flex items-center p-3 rounded-xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50 transition-colors">
-                <div className="bg-gray-100 p-2 rounded-lg mr-3 text-gray-600">
+              <Link href="/dashboard/expenses/suppliers" className="flex items-center p-3 rounded-xl border border-gray-100 dark:border-border hover:border-emerald-200 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors">
+                <div className="bg-gray-100 dark:bg-emerald-950/40 p-2 rounded-lg mr-3 text-gray-600 dark:text-emerald-400">
                   <HandCoins className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">{t('suppliersVendors')}</h3>
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-emerald-100">{t('suppliersVendors')}</h3>
                 </div>
               </Link>
 
-              <Link href="/dashboard/expenses/recurring" className="flex items-center p-3 rounded-xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50 transition-colors">
-                <div className="bg-gray-100 p-2 rounded-lg mr-3 text-gray-600">
+              <Link href="/dashboard/expenses/recurring" className="flex items-center p-3 rounded-xl border border-gray-100 dark:border-border hover:border-emerald-200 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors">
+                <div className="bg-gray-100 dark:bg-emerald-950/40 p-2 rounded-lg mr-3 text-gray-600 dark:text-emerald-400">
                   <RefreshCcw className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">{t('recurringExpenses')}</h3>
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-emerald-100">{t('recurringExpenses')}</h3>
                 </div>
               </Link>
             </div>

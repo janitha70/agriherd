@@ -284,8 +284,20 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+  .dark .gradient-text-paddy {
+    background: linear-gradient(135deg, #6ee7b7, #10b981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
   .gradient-text-hero {
     background: linear-gradient(135deg, #1F4B3F 0%, #E4A320 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .dark .gradient-text-hero {
+    background: linear-gradient(135deg, #6ee7b7 0%, #fcd34d 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

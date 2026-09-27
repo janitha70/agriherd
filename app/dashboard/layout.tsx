@@ -33,7 +33,6 @@ import { supabase } from "@/lib/supabase"
 const navigation = [
     { name: "Dashboard",     href: "/dashboard",                icon: LayoutDashboard },
     { name: "Livestock",     href: "/dashboard/livestock",      icon: Beef },
-    { name: "Add Animal",    href: "/dashboard/livestock/new",  icon: PlusCircle },
     { name: "Records",       href: "/dashboard/records",        icon: ClipboardList },
     { name: "Health Tracker",href: "/dashboard/health",         icon: ShieldPlus },
     { name: "Production",    href: "/dashboard/production",     icon: TrendingUp },
@@ -190,7 +189,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
 
             {/* ── Navigation ── */}
-            <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+            <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full">
                 {navigation.map((item, i) => {
                     const isActive = isNavActive(pathname, item.href)
                     const Icon = item.icon
@@ -236,12 +235,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         onClick={toggleLanguage}
                         className="flex-1 flex items-center justify-center gap-1.5 bg-muted text-muted-foreground font-semibold py-2 rounded-xl text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
-                        {language === 'en' ? 'EN / සිං' : 'සිං / EN'}
+                        {language === 'en' ? 'EN / SI' : 'SI / EN'}
                     </button>
                     <button
                         onClick={toggleTheme}
                         aria-label="Toggle dark mode"
-                        className="w-10 flex items-center justify-center bg-muted text-muted-foreground rounded-xl hover:bg-accent hover:text-accent-foreground transition-colors"
+                        className="w-10 shrink-0 flex items-center justify-center bg-muted text-muted-foreground rounded-xl hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
                         {isDark
                             ? <Sun className="w-4 h-4 text-turmeric" />

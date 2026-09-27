@@ -20,37 +20,37 @@ export function ExpenseSummaryCard({ title, title_si, amount, trend, type, icon:
 
   const colorStyles = {
     expense: {
-      bg: 'bg-rose-50',
-      icon: 'text-rose-600 bg-rose-100',
-      text: 'text-rose-600',
-      trendUp: 'text-rose-600',
-      trendDown: 'text-emerald-600'
+      bg: 'bg-rose-50 dark:bg-rose-950/20',
+      icon: 'text-rose-600 bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400',
+      text: 'text-rose-600 dark:text-rose-400',
+      trendUp: 'text-rose-600 dark:text-rose-400',
+      trendDown: 'text-emerald-600 dark:text-emerald-400'
     },
     income: {
-      bg: 'bg-emerald-50',
-      icon: 'text-emerald-600 bg-emerald-100',
-      text: 'text-emerald-600',
-      trendUp: 'text-emerald-600',
-      trendDown: 'text-rose-600'
+      bg: 'bg-emerald-50 dark:bg-emerald-950/20',
+      icon: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400',
+      text: 'text-emerald-600 dark:text-emerald-400',
+      trendUp: 'text-emerald-600 dark:text-emerald-400',
+      trendDown: 'text-rose-600 dark:text-rose-400'
     },
     balance: {
-      bg: 'bg-blue-50',
-      icon: 'text-blue-600 bg-blue-100',
-      text: 'text-gray-900',
-      trendUp: 'text-emerald-600',
-      trendDown: 'text-rose-600'
+      bg: 'bg-blue-50 dark:bg-blue-950/20',
+      icon: 'text-blue-600 bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400',
+      text: 'text-gray-900 dark:text-emerald-100',
+      trendUp: 'text-emerald-600 dark:text-emerald-400',
+      trendDown: 'text-rose-600 dark:text-rose-400'
     }
   }
 
   const style = colorStyles[type]
 
   return (
-    <Card className={cn("overflow-hidden border-none shadow-sm", style.bg)}>
+    <Card className={cn("overflow-hidden border border-transparent dark:border-border shadow-sm", style.bg)}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">{title}</p>
-            {title_si && <p className="text-[10px] text-gray-400 -mt-1 mb-1">{title_si}</p>}
+            <p className="text-sm font-medium text-gray-500 dark:text-muted-foreground">{title}</p>
+            {title_si && <p className="text-[10px] text-gray-400 dark:text-muted-foreground/50 -mt-1 mb-1">{title_si}</p>}
             
             <h3 className={cn("text-2xl font-bold mt-1", style.text)}>
               {formatLKR(amount)}
@@ -70,7 +70,7 @@ export function ExpenseSummaryCard({ title, title_si, amount, trend, type, icon:
               {isPositive ? <ArrowUpIcon className="w-4 h-4 mr-1" /> : <ArrowDownIcon className="w-4 h-4 mr-1" />}
               {Math.abs(trend)}%
             </span>
-            <span className="text-gray-500 ml-2">vs last month</span>
+            <span className="text-gray-500 dark:text-muted-foreground ml-2">vs last month</span>
           </div>
         )}
       </CardContent>
